@@ -1,0 +1,878 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>우리말 겨루기</title>
+<style>
+  :root {
+    --bg: #fff8ec;
+    --card: #ffffff;
+    --text: #23202b;
+    --muted: #6b6475;
+    --line: #eadfcb;
+    --accent: #e8590c;
+    --accent-press: #c24808;
+    --accent-soft: #ffe8d6;
+    --good: #2b8a3e;
+    --good-soft: #e3f6e6;
+    --bad: #c92a2a;
+    --bad-soft: #fde7e7;
+    --opt: #f6f0ff;
+    --opt-line: #c9b6f2;
+    --mascot: #ffb74d;
+    --mascot-dark: #e08e1a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17141c;
+      --card: #221e2a;
+      --text: #f4f0f8;
+      --muted: #b2a9bf;
+      --line: #3a3346;
+      --accent: #ff8a3d;
+      --accent-press: #e8590c;
+      --accent-soft: #3d2618;
+      --good: #69db7c;
+      --good-soft: #1c3322;
+      --bad: #ff8787;
+      --bad-soft: #3d1f22;
+      --opt: #2c2540;
+      --opt-line: #5b4b8a;
+      --mascot: #ffb74d;
+      --mascot-dark: #d9861a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", "Noto Sans KR", system-ui, sans-serif;
+    font-size: 18px;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 20px 16px 48px; }
+  header.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  h1 { font-size: clamp(1.6rem, 5vw, 2.4rem); margin: 0; letter-spacing: -0.02em; }
+  h1 span { color: var(--accent); }
+  h2 { font-size: 1.3rem; margin: 0 0 12px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 20px; box-shadow: 0 2px 0 var(--line); }
+  .muted { color: var(--muted); }
+  .hidden { display: none !important; }
+  button { font: inherit; cursor: pointer; border-radius: 14px; border: 2px solid transparent; padding: 12px 18px; }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .btn { background: var(--accent); color: #fff; font-weight: 700; }
+  .btn:hover { background: var(--accent-press); }
+  .btn-ghost { background: transparent; color: var(--text); border-color: var(--line); }
+  .btn-ghost:hover { border-color: var(--accent); }
+  .btn-big { font-size: 1.25rem; padding: 16px 24px; width: 100%; }
+  .btn-sm { padding: 8px 12px; font-size: 0.95rem; }
+  label { font-weight: 700; display: block; margin-bottom: 6px; }
+  input, select { font: inherit; padding: 12px 14px; border-radius: 12px; border: 2px solid var(--line); background: var(--card); color: var(--text); width: 100%; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field { margin-bottom: 14px; }
+
+  /* Start screen */
+  .hero { display: grid; gap: 16px; }
+  @media (min-width: 720px) { .hero { grid-template-columns: 240px 1fr; align-items: center; } }
+  .hero .mascot { width: 200px; margin: 0 auto; }
+  .rules { margin: 8px 0 0; padding-left: 20px; color: var(--muted); }
+
+  /* Game */
+  .status { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .pill { background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; font-size: 0.95rem; }
+  .pill b { color: var(--accent); }
+  .qnum { color: var(--muted); font-weight: 700; margin-bottom: 6px; }
+  .retry-tag { display: inline-block; background: var(--accent-soft); color: var(--accent); font-weight: 700; border-radius: 999px; padding: 2px 10px; font-size: 0.85rem; margin-left: 6px; }
+  .sentence { font-size: clamp(1.4rem, 4.6vw, 2rem); font-weight: 700; line-height: 1.6; margin: 6px 0 20px; word-break: keep-all; }
+  .blank { display: inline-block; min-width: 3.2em; border-bottom: 4px solid var(--accent); text-align: center; color: var(--accent); }
+  .options { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .opt { background: var(--opt); border-color: var(--opt-line); color: var(--text); font-size: clamp(1.3rem, 4.4vw, 1.8rem); font-weight: 800; padding: 22px 10px; word-break: keep-all; transition: transform .1s; }
+  .opt:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .opt .key { display: block; font-size: 0.8rem; font-weight: 600; color: var(--muted); }
+  .opt.right { background: var(--good-soft); border-color: var(--good); }
+  .opt.wrong { background: var(--bad-soft); border-color: var(--bad); }
+  .opt:disabled { cursor: default; transform: none; }
+  .cheer { margin-top: 14px; background: var(--accent-soft); border-radius: 14px; padding: 10px 14px; font-weight: 700; }
+
+  /* Feedback */
+  .feedback { display: grid; gap: 14px; margin-top: 16px; }
+  @media (min-width: 640px) { .feedback { grid-template-columns: 170px 1fr; align-items: center; } }
+  .feedback .mascot { width: 160px; margin: 0 auto; }
+  .fb-title { font-size: 1.6rem; font-weight: 800; margin: 0 0 4px; }
+  .fb-good .fb-title { color: var(--good); }
+  .fb-bad .fb-title { color: var(--bad); }
+  .tip { background: var(--bg); border-radius: 12px; padding: 10px 14px; margin: 10px 0 14px; }
+  .tip b { color: var(--accent); }
+
+  /* Mascot animation */
+  .mascot svg { width: 100%; height: auto; display: block; }
+  .bounce { animation: bounce .7s ease-in-out infinite alternate; }
+  .droop { animation: droop 1.6s ease-in-out infinite; }
+  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-12px); } }
+  @keyframes droop { 0%,100% { transform: rotate(0); } 50% { transform: rotate(-4deg); } }
+  @media (prefers-reduced-motion: reduce) { .bounce, .droop, .confetti i { animation: none !important; } }
+  .confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 20; }
+  .confetti i { position: absolute; top: -20px; width: 10px; height: 16px; border-radius: 3px; animation: fall 1.6s ease-in forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(540deg); opacity: .8; } }
+
+  /* Awards */
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .awards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .award { border-radius: 16px; padding: 14px; background: var(--accent-soft); text-align: center; }
+  .award .medal { font-size: 2rem; }
+  .award .t { font-weight: 800; }
+  .award .who { font-size: 1.15rem; font-weight: 800; margin-top: 4px; word-break: keep-all; }
+  .award .d { color: var(--muted); font-size: 0.9rem; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 1rem; }
+  th, td { padding: 10px 8px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+  th { color: var(--muted); font-size: 0.9rem; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .bar { height: 8px; background: var(--line); border-radius: 99px; min-width: 60px; overflow: hidden; }
+  .bar > span { display: block; height: 100%; background: var(--accent); }
+  .tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .note { font-size: 0.9rem; color: var(--muted); margin-top: 10px; }
+  .filters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+  @media (max-width: 520px) { .filters { grid-template-columns: 1fr 1fr; } .filters .f-period { grid-column: 1 / -1; } }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 18px; border-radius: 12px; z-index: 30; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>우리말 <span>겨루기</span></h1>
+    <button class="btn-ghost btn-sm" id="teacherBtn" type="button">🏆 선생님 · 시상</button>
+  </header>
+
+  <!-- 시작 화면 -->
+  <section id="startView" class="card">
+    <div class="hero">
+      <div class="mascot bounce" id="startMascot"></div>
+      <div>
+        <h2>안녕! 나는 말랑이야. 맞춤법 대결, 해 볼래?</h2>
+        <form id="startForm" autocomplete="off">
+          <div class="row">
+            <div class="field">
+              <label for="grade">학년</label>
+              <select id="grade" required></select>
+            </div>
+            <div class="field">
+              <label for="cls">반</label>
+              <select id="cls" required></select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="name">이름</label>
+            <input id="name" maxlength="20" placeholder="이름을 써 주세요" required>
+          </div>
+          <button class="btn btn-big" type="submit">도전 시작! ▶</button>
+        </form>
+        <ul class="rules">
+          <li>문장에 알맞은 낱말을 두 개 중에서 골라요.</li>
+          <li>틀린 문제는 조금 뒤에 다시 나와요. 다시 맞히면 내 것!</li>
+          <li>맞힌 기록이 쌓여 월말·학기말에 시상해요.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 게임 화면 -->
+  <section id="gameView" class="hidden">
+    <div class="status">
+      <span class="pill" id="pWho"></span>
+      <span class="pill">오늘 <b id="pToday">0/0</b></span>
+      <span class="pill">이번 달 승률 <b id="pRate">-</b></span>
+      <span class="pill">연속 정답 <b id="pStreak">0</b></span>
+    </div>
+    <div class="card">
+      <div class="qnum" id="qnum"></div>
+      <div class="sentence" id="sentence"></div>
+      <div class="options" id="options"></div>
+      <div class="cheer hidden" id="cheer"></div>
+      <div id="feedback" class="hidden"></div>
+    </div>
+    <div class="tools">
+      <button class="btn-ghost" id="quitBtn" type="button">그만하고 기록 보기</button>
+    </div>
+  </section>
+
+  <!-- 결과 화면 -->
+  <section id="doneView" class="card hidden">
+    <div class="hero">
+      <div class="mascot bounce" id="doneMascot"></div>
+      <div>
+        <h2 id="doneTitle"></h2>
+        <p id="doneText"></p>
+        <div class="tools">
+          <button class="btn" id="againBtn" type="button">한 번 더 도전!</button>
+          <button class="btn-ghost" id="homeBtn" type="button">처음으로</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 선생님 · 시상 화면 -->
+  <section id="teacherView" class="card hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+      <h2 style="margin:0">🏆 시상 · 기록 관리</h2>
+      <button class="btn-ghost btn-sm" id="closeTeacher" type="button">← 돌아가기</button>
+    </div>
+    <div id="pinBox" style="margin-top:14px">
+      <p class="muted" id="pinMsg"></p>
+      <div class="row" style="max-width:420px">
+        <input id="pinInput" type="password" inputmode="numeric" maxlength="8" placeholder="숫자 4자리 이상" autocomplete="off">
+        <button class="btn" id="pinOk" type="button">확인</button>
+      </div>
+    </div>
+    <div id="teacherBody" class="hidden" style="margin-top:16px">
+      <div class="filters">
+        <div class="f-period"><label for="fPeriod">기간</label><select id="fPeriod"></select></div>
+        <div><label for="fGrade">학년</label><select id="fGrade"></select></div>
+        <div><label for="fCls">반</label><select id="fCls"></select></div>
+      </div>
+      <div class="awards" id="awards"></div>
+      <div class="table-wrap"><table id="rankTable"></table></div>
+      <p class="note">순위는 맞힌 개수 → 승률 순입니다. 정확도상은 <b>20문제 이상</b> 도전한 학생 중에서 뽑아요. 성장상은 지난 달보다 승률이 가장 많이 오른 학생(두 달 모두 10문제 이상)이에요.</p>
+      <div class="tools">
+        <button class="btn" id="csvBtn" type="button">📄 엑셀(CSV)로 저장</button>
+        <button class="btn-ghost" id="backupBtn" type="button">💾 백업 파일 저장</button>
+        <button class="btn-ghost" id="importBtn" type="button">📥 다른 기기 기록 합치기</button>
+        <input type="file" id="importFile" accept=".json,application/json" class="hidden">
+        <button class="btn-ghost" id="resetBtn" type="button" style="color:var(--bad)">기록 모두 지우기</button>
+      </div>
+      <p class="note">기록은 이 기기의 브라우저에 저장돼요. 학생들이 여러 태블릿을 쓴다면, 각 기기에서 <b>백업 파일 저장</b> → 선생님 PC에서 <b>다른 기기 기록 합치기</b>를 하면 한 곳에서 시상할 수 있어요. 같은 파일을 여러 번 합쳐도 중복되지 않아요.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ───────── 문제 은행: [문장(___ 자리에 정답), 정답, 오답, 설명] ─────────
+  const BANK = [
+    ['___ 기분이 좋은 날이에요.', '왠지', '웬지', "'왠지'는 '왜인지'를 줄인 말이에요."],
+    ['네가 ___로 이렇게 일찍 왔니?', '웬일', '왠일', "'어찌 된 일'이라는 뜻은 '웬일'이에요."],
+    ['복도에서 뛰면 안 ___.', '돼요', '되요', "'되어요'로 바꿀 수 있으면 '돼요'예요."],
+    ['나는 멋진 과학자가 ___ 싶어요.', '되고', '돼고', "'되어고'는 말이 안 되니까 '되고'예요."],
+    ['준비가 다 ___.', '됐다', '됬다', "'되었다'를 줄이면 '됐다'예요."],
+    ['동생이 밥을 ___ 먹어요.', '안', '않', "'아니'를 줄이면 '안', '아니하'를 줄이면 '않'이에요."],
+    ['나는 절대 울지 ___을 거야.', '않', '안', "'-지 않다'처럼 '-지' 뒤에는 '않'을 써요."],
+    ['학생___ 지켜야 할 약속이에요.', '으로서', '으로써', "자격·신분을 말할 때는 '로서'를 써요."],
+    ['대화___ 다툼을 해결했어요.', '로써', '로서', "수단·방법을 말할 때는 '로써'를 써요."],
+    ['퀴즈의 정답을 모두 ___.', '맞혔다', '맞췄다', "정답을 골라내는 것은 '맞히다'예요."],
+    ['퍼즐 조각을 하나하나 ___.', '맞췄다', '맞혔다', "서로 맞대어 붙이는 것은 '맞추다'예요."],
+    ['감기가 빨리 ___ 좋겠어요.', '나았으면', '낳았으면', "병이 좋아지는 것은 '낫다 → 나았다'예요."],
+    ['닭이 알을 ___.', '낳았다', '나았다', "알이나 아기를 세상에 내놓는 것은 '낳다'예요."],
+    ['버스에서 지갑을 ___.', '잃어버렸다', '잊어버렸다', "물건이 없어지면 '잃어버리다'예요."],
+    ['친구와의 약속을 깜빡 ___.', '잊어버렸다', '잃어버렸다', "기억이 안 나는 것은 '잊어버리다'예요."],
+    ['선생님께서 수학을 ___ 주셨어요.', '가르쳐', '가리켜', "지식을 알려 주는 것은 '가르치다'예요."],
+    ['손가락으로 북쪽 하늘을 ___.', '가리켰다', '가르쳤다', "방향이나 대상을 짚는 것은 '가리키다'예요."],
+    ['나와 동생은 좋아하는 음식이 ___.', '달라요', '틀려요', "같지 않은 것은 '다르다', 옳지 않은 것은 '틀리다'예요."],
+    ['받아쓰기에서 두 문제를 ___.', '틀렸다', '달랐다', "답이 옳지 않은 것은 '틀리다'예요."],
+    ['할머니께 소포를 ___.', '부쳤다', '붙였다', "편지나 물건을 보내는 것은 '부치다'예요."],
+    ['봉투에 우표를 ___.', '붙였다', '부쳤다', "떨어지지 않게 하는 것은 '붙이다'예요."],
+    ['약속은 ___ 지켜야 해요.', '반드시', '반듯이', "'꼭, 틀림없이'라는 뜻은 '반드시'예요."],
+    ['허리를 ___ 펴고 앉아요.', '반듯이', '반드시', "'비뚤지 않게 바르게'라는 뜻은 '반듯이'예요."],
+    ['네가 늘 행복하길 ___.', '바라', '바래', "소원은 '바라다 → 바라'예요. '바래다'는 색이 변하는 거예요."],
+    ['제 ___은 가족 모두 건강한 거예요.', '바람', '바램', "'바라다'의 명사는 '바람'이에요."],
+    ['오래된 사진의 색이 누렇게 ___.', '바랬다', '바랐다', "색이 변하는 것은 '바래다 → 바랬다'예요."],
+    ['엄마가 카드로 ___하셨어요.', '결제', '결재', "돈을 치르는 것은 '결제', 윗사람이 승인하는 것은 '결재'예요."],
+    ['아이스크림이 ___ 녹았어요.', '금세', '금새', "'금시에'를 줄인 말이라 '금세'예요."],
+    ['___ 동안 비가 내렸어요.', '며칠', '몇일', "'몇 일'이 아니라 '며칠'로 써요."],
+    ['숙제를 안 가져왔어. 이제 ___?', '어떡해', '어떻게', "'어떻게 해'를 줄이면 '어떡해'예요."],
+    ['이 문제는 ___ 풀어요?', '어떻게', '어떡해', "방법을 물을 때는 '어떻게'예요."],
+    ['저녁을 먹고 ___를 도왔어요.', '설거지', '설겆이', "'설거지'가 표준어예요."],
+    ['정말 ___한 일이 일어났어요.', '희한', '희안', "'매우 드물고 신기하다'는 '희한하다'예요."],
+    ['친구를 ___에 만났어요.', '오랜만', '오랫만', "'오래간만'을 줄인 말이라 '오랜만'이에요."],
+    ['___를 베고 누웠어요.', '베개', '베게', "'베개'가 맞는 말이에요."],
+    ['점심 메뉴는 김치___예요.', '찌개', '찌게', "'찌개'가 맞는 말이에요."],
+    ['점심으로 매콤한 ___을 먹었어요.', '육개장', '육계장', "'육개장'이 맞는 말이에요."],
+    ['손을 ___ 씻어요.', '깨끗이', '깨끗히', "'깨끗하다'처럼 'ㅅ' 받침 뒤에는 '-이'를 써요."],
+    ['선물을 ___ 포장했어요.', '일일이', '일일히', "'하나하나'라는 뜻의 '일일이'예요."],
+    ['___ 생각해 보니 내가 잘못했어요.', '곰곰이', '곰곰히', "'곰곰이'가 맞는 말이에요."],
+    ['쉬는 시간에 ___ 책을 읽어요.', '틈틈이', '틈틈히', "같은 말이 반복되는 낱말 뒤에는 '-이'를 써요."],
+    ['준비물을 ___ 챙겼어요.', '꼼꼼히', '꼼꼼이', "'꼼꼼하다'에서 온 말이라 '꼼꼼히'예요."],
+    ['___ 말해 줘서 고마워.', '솔직히', '솔직이', "'솔직하다'에서 온 말이라 '솔직히'예요."],
+    ['오늘도 ___ 공부했어요.', '열심히', '열심이', "'열심히'가 맞는 말이에요."],
+    ['자리에 ___ 앉아 있어요.', '가만히', '가만이', "'가만히'가 맞는 말이에요."],
+    ['위험을 ___ 친구를 구했어요.', '무릅쓰고', '무릎쓰고', "'무릅쓰다'는 무릎과 상관없어요!"],
+    ['넘어져서 ___이 까졌어요.', '무릎', '무릅', "다리의 관절은 '무릎'이에요."],
+    ['분식집에서 ___를 먹었어요.', '떡볶이', '떡볶기', "'떡볶이'가 맞는 말이에요."],
+    ['아침에 일어나 ___을 뗐어요.', '눈곱', '눈꼽', "소리는 [눈꼽]이지만 '눈곱'으로 써요."],
+    ['너무 ___어서 웃음이 나왔어요.', '어이없', '어의없', "'어이없다'가 맞는 말이에요."],
+    ['연극에서 왕 ___을 맡았어요.', '역할', '역활', "'역할'이 맞는 말이에요."],
+    ['내가 청소 당번을 ___.', '할게', '할께', "소리는 [할께]지만 '할게'로 써요."],
+    ['지금 바로 ___요.', '갈게', '갈께', "소리는 [갈께]지만 '갈게'로 써요."],
+    ['선생님, 내일 ___.', '봬요', '뵈요', "'뵈어요'를 줄이면 '봬요'예요."],
+    ['___께 공손하게 인사해요.', '웃어른', '윗어른', "위아래 짝이 없는 말은 '웃-'을 써요."],
+    ['___에 사는 친구와 놀았어요.', '위층', '윗층', "된소리·거센소리 앞에서는 '위-'를 써요."],
+    ['___가 흔들려서 치과에 갔어요.', '윗니', '웃니', "아랫니와 짝이 있으니 '윗니'예요."],
+    ['사탕의 ___를 세어 보세요.', '개수', '갯수', "'개수'는 사이시옷을 넣지 않아요."],
+    ['줄넘기 ___를 세었어요.', '횟수', '회수', "몇 번인지 세는 것은 '횟수'예요."],
+    ['___가 그치지 않아요.', '장맛비', '장마비', "'장마+비' 사이에 사이시옷이 들어가요."],
+    ['___이 방긋 웃어요.', '해님', '햇님', "'해님'에는 사이시옷을 넣지 않아요."],
+    ['바람에 ___이 떨어져요.', '나뭇잎', '나무잎', "'나무+잎' 사이에 사이시옷이 들어가요."],
+    ['여름 방학에 ___에 놀러 갔어요.', '바닷가', '바다가', "'바다+가' 사이에 사이시옷이 들어가요."],
+    ['___에 친구를 만났어요.', '등굣길', '등교길', "'등교+길' 사이에 사이시옷이 들어가요."],
+    ['책의 ___을 먼저 읽어요.', '머리말', '머릿말', "'머리말'은 사이시옷 없이 써요."],
+    ['반장이 ___을 했어요.', '인사말', '인삿말', "'인사말'은 사이시옷 없이 써요."],
+    ['어른께는 ___을 써요.', '존댓말', '존대말', "'존대+말' 사이에 사이시옷이 들어가요."],
+    ['감기에 걸려 ___이 나요.', '콧물', '코물', "'코+물' 사이에 사이시옷이 들어가요."],
+    ['___이 창문을 두드려요.', '빗방울', '비방울', "'비+방울' 사이에 사이시옷이 들어가요."],
+    ['___가 아삭아삭 맛있어요.', '깍두기', '깍뚜기', "'깍두기'가 맞는 말이에요."],
+    ['___ 안 와도 괜찮아.', '굳이', '구지', "소리는 [구지]지만 '굳이'로 써요."],
+    ['친구와 ___ 놀이터에 갔어요.', '같이', '가치', "소리는 [가치]지만 '같이'로 써요."],
+    ['동생이 ___ 내 장난감을 숨겼어요.', '일부러', '일부로', "'일부러'가 맞는 말이에요."],
+    ['엄마를 ___ 사랑하냐면요!', '얼마큼', '얼만큼', "'얼마만큼'을 줄이면 '얼마큼'이에요."],
+    ['___처럼 다시 일어나요.', '오뚝이', '오뚜기', "'오뚝이'가 맞는 말이에요."],
+    ['두 낱말이 너무 ___.', '헷갈려요', '햇갈려요', "'헷갈리다'가 맞는 말이에요."],
+    ['전학 온 친구와 ___.', '사귀었다', '사겼다', "'사귀다'에 '-었다'를 붙여 '사귀었다'예요."],
+    ['어제 수학 시험을 ___.', '치렀다', '치뤘다', "기본형이 '치르다'라서 '치렀다'예요."],
+    ['할머니와 김치를 ___.', '담갔다', '담궜다', "기본형이 '담그다'라서 '담갔다'예요."],
+    ['나갈 때 문을 꼭 ___.', '잠갔다', '잠궜다', "기본형이 '잠그다'라서 '잠갔다'예요."],
+    ['소풍 생각에 마음이 ___.', '설렌다', '설레인다', "기본형이 '설레다'라서 '설렌다'예요."],
+    ['도서관에서는 큰 소리를 ___ 주세요.', '삼가', '삼가해', "기본형이 '삼가다'라서 '삼가'예요."],
+    ['우리 반 ___ 민수는 늘 웃겨요.', '개구쟁이', '개구장이', "그런 성질을 가진 사람은 '-쟁이'예요."],
+    ['멋지게 차려입은 아빠는 ___예요.', '멋쟁이', '멋장이', "그런 성질을 가진 사람은 '-쟁이'예요."],
+    ['벽에 시멘트를 바르는 ___', '미장이', '미쟁이', "기술을 가진 사람은 '-장이'예요."],
+    ['봄날 들판에 ___가 피어올라요.', '아지랑이', '아지랭이', "'아지랑이'가 표준어예요."],
+    ['___에 라면을 끓였어요.', '냄비', '남비', "'냄비'가 표준어예요."],
+    ['갈기가 멋진 ___ 사자', '수컷', '숫컷', "'수-' 뒤의 'ㅋ'은 그대로 '수컷'이에요."],
+    ['떨어뜨린 장난감이 ___.', '부서졌다', '부숴졌다', "'부서지다'가 맞는 말이에요."],
+    ['하품하며 입을 크게 ___.', '벌렸다', '벌였다', "틈을 넓히는 것은 '벌리다'예요."],
+    ['마을에서 큰 잔치를 ___.', '벌였다', '벌렸다', "일을 차리는 것은 '벌이다'예요."],
+    ['고무줄을 길게 ___.', '늘였다', '늘렸다', "길이를 길게 하는 것은 '늘이다'예요."],
+    ['책 읽는 시간을 ___.', '늘렸다', '늘였다', "수나 양을 많게 하는 것은 '늘리다'예요."],
+    ['발표 차례를 기다리며 마음을 ___.', '졸였다', '조렸다', "속을 태우는 것은 '졸이다'예요."],
+    ['배추를 소금에 ___.', '절였다', '저렸다', "소금에 담그는 것은 '절이다'예요."],
+    ['부모님 속을 ___면 안 돼요.', '썩이', '썩히', "마음을 괴롭게 하는 것은 '썩이다'예요."],
+    ['___ 놀이터에서 만나자.', '이따가', '있다가', "'조금 지난 뒤에'는 '이따가'예요."],
+    ['옷을 입은 ___ 잠들었어요.', '채', '체', "'그 상태 그대로'는 '채'예요."],
+    ['모르면서 아는 ___했어요.', '체', '채', "'그런 척'은 '체'예요."],
+    ['무엇이___ 열심히 해 봐요.', '든지', '던지', "고르는 것은 '-든지', 지난 일은 '-던지'예요."],
+    ['얼마나 춥___ 손이 꽁꽁 얼었어요.', '던지', '든지', "지난 일을 떠올릴 때는 '-던지'예요."],
+    ['민수가 오늘 아프___.', '대', '데', "남에게 들은 말을 전할 때는 '-대'예요."],
+    ['가방을 어깨에 ___.', '멨다', '맸다', "어깨에 거는 것은 '메다'예요."],
+    ['운동화 끈을 단단히 ___.', '맸다', '멨다', "끈을 묶는 것은 '매다'예요."],
+    ['강아지가 멍멍 ___.', '짖는다', '짓는다', "개가 소리 내는 것은 '짖다'예요."],
+    ['꽃향기를 ___.', '맡았다', '맞았다', "냄새를 느끼는 것은 '맡다'예요."],
+    ['___이 익은 얼굴이에요.', '낯', '낮', "얼굴을 뜻하는 말은 '낯'이에요."],
+    ['햇___이 눈부셔요.', '빛', '빚', "밝게 비추는 것은 '빛'이에요."],
+    ['소나기에 옷이 흠뻑 ___.', '젖었다', '저었다', "물이 배는 것은 '젖다'예요."],
+    ['밤새 눈이 소복이 ___.', '쌓였다', '싸였다', "겹겹이 포개지는 것은 '쌓이다'예요."],
+    ['뜨거운 국을 후후 불어 ___.', '식혔다', '시켰다', "온도를 낮추는 것은 '식히다'예요."],
+    ['한 ___ 한 ___ 앞으로 나아가요.', '걸음', '거름', "발을 옮기는 것은 '걸음'이에요."],
+    ['바람에 문이 쾅 ___.', '닫혔다', '다쳤다', "문이 닫아지는 것은 '닫히다'예요."],
+    ['엄마가 시금치를 ___.', '무쳤다', '묻혔다', "양념에 버무리는 것은 '무치다'예요."],
+    ['공원에 벚꽃이 ___이에요.', '한창', '한참', "가장 활기찬 때는 '한창'이에요."],
+    ['버스를 ___ 동안 기다렸어요.', '한참', '한창', "시간이 꽤 지나는 동안은 '한참'이에요."],
+    ['산 ___ 마을에 할머니가 사세요.', '너머', '넘어', "건너편 공간은 '너머'예요."],
+    ['고양이가 담을 ___ 갔어요.', '넘어', '너머', "움직임을 나타내면 '넘어'예요."],
+    ['___ 사전을 펼쳤어요.', '두꺼운', '두터운', "물건의 두께는 '두껍다'예요."],
+    ['오늘은 숙제가 ___.', '적다', '작다', "양이 많지 않은 것은 '적다'예요."],
+    ['동생은 나보다 키가 ___.', '작다', '적다', "크기가 크지 않은 것은 '작다'예요."],
+    ['집에 가는 길에 문구점에 ___.', '들렀다', '들렸다', "잠깐 머무는 것은 '들르다 → 들렀다'예요."],
+    ['___ 기다려 줘서 고마워.', '오랫동안', '오랜동안', "'오랫동안'이 맞는 말이에요."],
+    ['제 이름은 김철수___.', '예요', '이에요', "받침이 없는 말 뒤에는 '예요'를 써요."],
+    ['이것은 제 연필___.', '이에요', '예요', "받침이 있는 말 뒤에는 '이에요'를 써요."],
+    ['그건 제 것이 ___.', '아니에요', '아니예요', "'아니다'는 '아니에요'로 써요."],
+    ['내일은 꼭 일찍 올 ___.', '거예요', '거에요', "'것이에요'를 줄이면 '거예요'예요."],
+    ['___하면 같이 가자.', '웬만', '왠만', "'웬만하다'가 맞는 말이에요."],
+    ['___ 늦었으니 천천히 가자.', '어차피', '어짜피', "'어차피'가 맞는 말이에요."],
+    ['___ 막대기를 주웠어요.', '기다란', '길다란', "'기다랗다'에서 온 '기다란'이에요."],
+    ['___ 운동장에서 뛰어놀아요.', '널따란', '넓다란', "'널따랗다'에서 온 '널따란'이에요."],
+    ['___와 같은 박수를 받았어요.', '우레', '우뢰', "천둥을 뜻하는 말은 '우레'예요."],
+    ['고기를 ___에 싸 먹어요.', '상추', '상치', "'상추'가 표준어예요."],
+    ['체육 선생님이 ___를 불었어요.', '호루라기', '호루루기', "'호루라기'가 표준어예요."],
+    ['시간이 ___ 않아요.', '넉넉지', '넉넉치', "'넉넉하지'에서 '하'가 통째로 빠져 '넉넉지'예요."],
+    ['늦은 ___를 대지 마세요.', '핑계', '핑게', "'핑계'가 맞는 말이에요."],
+    ['___에 알림장을 붙였어요.', '게시판', '계시판', "'게시판'이 맞는 말이에요."],
+    ['___에서 잠깐 쉬었어요.', '휴게실', '휴계실', "'휴게실'이 맞는 말이에요."],
+    ['동생 ___를 하느라 힘들어요.', '뒤치다꺼리', '뒤치닥거리', "'뒤치다꺼리'가 맞는 말이에요."],
+    ['___하는 선수들이 모였어요.', '내로라', '내노라', "'내로라하다'가 맞는 말이에요."],
+    ['발표 전에 ___.', '안절부절못했다', '안절부절했다', "'안절부절못하다'가 표준어예요."],
+    ['눈 위에 ___이 찍혔어요.', '발자국', '발자욱', "'발자국'이 표준어예요."],
+    ['엄마의 ___가 반짝여요.', '귀걸이', '귀거리', "'귀에 거는 것'이라 '귀걸이'예요."],
+    ['냇가에서 ___를 주웠어요.', '돌멩이', '돌맹이', "'돌멩이'가 맞는 말이에요."],
+    ['모두 ___을 치며 기뻐했어요.', '손뼉', '손벽', "'손뼉'이 맞는 말이에요."],
+    ['토끼가 ___ 뛰어요.', '깡충깡충', '깡총깡총', "'깡충깡충'이 표준어예요."],
+    ['동생과 ___를 했어요.', '소꿉놀이', '소꼽놀이', "'소꿉놀이'가 맞는 말이에요."],
+    ['친구들과 ___로 놀았어요.', '숨바꼭질', '숨박꼭질', "'숨바꼭질'이 맞는 말이에요."],
+    ['할머니는 손주를 ___ 아끼세요.', '끔찍이', '끔찍히', "'끔찍이'가 맞는 말이에요."],
+    ['우리 반에는 ___ 형제가 있어요.', '쌍둥이', '쌍동이', "'쌍둥이'가 표준어예요."],
+    ['꽃밭에 ___ 튤립이 피었어요.', '빨간', '빨강', "꾸며 줄 때는 '빨간'을 써요."],
+    ['___을 하고 나서 칭찬받았어요.', '심부름', '심부럼', "'심부름'이 맞는 말이에요."],
+    ['___가 많아서 즐거웠어요.', '볼거리', '볼꺼리', "소리는 [볼꺼리]지만 '볼거리'로 써요."],
+  ].map((q, i) => ({ id: i, text: q[0], answer: q[1], wrong: q[2], tip: q[3] }));
+
+  const MSG = {
+    right: ['정답! 맞춤법 박사님이네요! 🎉', '대단해요! 정확하게 알고 있어요!', '완벽해요! 이 기세로 계속!', '우와, 척척박사!', '맞았어요! 우리말 실력이 쑥쑥 자라요!'],
+    retryRight: ['다시 도전해서 맞혔어요! 이제 진짜 내 것! 💪', '포기하지 않더니 결국 해냈어요!', '아까 틀린 문제를 이겨 냈어요. 최고!'],
+    wrong: ['아쉬워요! 틀리면서 배우는 거예요.', '괜찮아요, 이번에 확실히 알게 됐잖아요!', '아깝다! 조금 뒤에 이 문제가 다시 나와요. 꼭 맞혀 봐요!', '실수는 배움의 시작! 다시 도전!', '포기하지 않는 사람이 진짜 승자예요!'],
+    twoWrong: ['연속으로 틀려도 괜찮아요. 문장을 소리 내어 천천히 읽어 보세요. 📖', '헷갈리는 게 당연해요. 어른들도 자주 틀리는 문제예요!', '숨 한 번 크게 쉬고, 다시 도전! 말랑이가 응원해요! 📣'],
+    streak: { 3: '3문제 연속 정답! 불타오르네요! 🔥', 5: '5연속 정답! 맞춤법 고수 등장! ⭐', 10: '10연속 정답!! 우리말 달인이에요! 👑', 20: '20연속 정답!!! 전설이 되었어요! 🏆' },
+    every: ['벌써 {n}문제째! 꾸준함이 최고의 실력이에요. 👏', '{n}문제 돌파! 도전할수록 승률이 올라가요!', '{n}문제나 풀었어요! 오늘도 한 뼘 성장! 🌱'],
+    rateUp: '이번 달 승률이 올랐어요! 📈 계속 가 볼까요?',
+  };
+  const pick = (a) => a[Math.floor(Math.random() * a.length)];
+
+  // ───────── 저장소 ─────────
+  const KEY = 'urimal.v1';
+  const safeGet = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+  const safeSet = (k, v) => { try { localStorage.setItem(k, v); return true; } catch { return false; } };
+  function load() {
+    let s = null;
+    try { s = JSON.parse(safeGet(KEY) || 'null'); } catch { s = null; }
+    if (!s || typeof s !== 'object') s = {};
+    if (!s.deviceId) s.deviceId = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    s.devices = s.devices || {};
+    s.seen = s.seen || {};
+    if (!s.devices[s.deviceId]) s.devices[s.deviceId] = { updatedAt: 0, students: {} };
+    return s;
+  }
+  let S = load();
+  let storageOk = safeSet(KEY, JSON.stringify(S));
+  const save = () => { storageOk = safeSet(KEY, JSON.stringify(S)); };
+
+  const pad = (n) => String(n).padStart(2, '0');
+  const ymOf = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1);
+  const skey = (g, c, n) => g + '-' + c + '-' + n;
+
+  function record(student, correct) {
+    const dev = S.devices[S.deviceId];
+    const k = skey(student.g, student.c, student.n);
+    const st = dev.students[k] || (dev.students[k] = { g: student.g, c: student.c, n: student.n, m: {} });
+    const ym = ymOf(new Date());
+    const cell = st.m[ym] || (st.m[ym] = [0, 0]);
+    if (correct) cell[0]++;
+    cell[1]++;
+    dev.updatedAt = Date.now();
+    save();
+  }
+
+  // 모든 기기 기록을 학생별로 합침 → { key: {g,c,n,m:{ym:[c,t]}} }
+  function aggregate() {
+    const out = {};
+    for (const dev of Object.values(S.devices)) {
+      for (const [k, st] of Object.entries(dev.students || {})) {
+        const o = out[k] || (out[k] = { g: st.g, c: st.c, n: st.n, m: {} });
+        for (const [ym, v] of Object.entries(st.m || {})) {
+          const cell = o.m[ym] || (o.m[ym] = [0, 0]);
+          cell[0] += v[0] || 0; cell[1] += v[1] || 0;
+        }
+      }
+    }
+    return out;
+  }
+  function sumMonths(st, months) {
+    let ok = 0, t = 0;
+    for (const ym of months) { const v = st.m[ym]; if (v) { ok += v[0]; t += v[1]; } }
+    return { ok, t, r: t ? ok / t : 0 };
+  }
+
+  // ───────── 기간 ─────────
+  function monthsRange(y1, m1, y2, m2) {
+    const out = []; let y = y1, m = m1;
+    while (y < y2 || (y === y2 && m <= m2)) { out.push(y + '-' + pad(m)); m++; if (m > 12) { m = 1; y++; } }
+    return out;
+  }
+  function periods() {
+    const now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
+    const prev = new Date(y, m - 2, 1);
+    const sy = m >= 3 ? y : y - 1; // 학년도
+    const list = [
+      { id: 'thisMonth', label: `이번 달 (${m}월)`, months: [ymOf(now)], prevMonths: [ymOf(prev)] },
+      { id: 'lastMonth', label: `지난 달 (${prev.getMonth() + 1}월)`, months: [ymOf(prev)], prevMonths: [ymOf(new Date(y, m - 3, 1))] },
+      { id: 's1', label: `${sy}학년도 1학기 (3~8월)`, months: monthsRange(sy, 3, sy, 8) },
+      { id: 's2', label: `${sy}학년도 2학기 (9~2월)`, months: monthsRange(sy, 9, sy + 1, 2) },
+      { id: 'year', label: `${sy}학년도 전체`, months: monthsRange(sy, 3, sy + 1, 2) },
+    ];
+    return list;
+  }
+
+  // ───────── 캐릭터 (말랑이) ─────────
+  function mascot(mood) {
+    const happy = mood === 'happy', sad = mood === 'sad';
+    const eyes = happy
+      ? '<path d="M70 92 q10 -12 20 0" stroke="#3b2a1a" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M110 92 q10 -12 20 0" stroke="#3b2a1a" stroke-width="5" fill="none" stroke-linecap="round"/>'
+      : sad
+        ? '<path d="M68 86 l20 6" stroke="#3b2a1a" stroke-width="5" stroke-linecap="round"/><path d="M132 86 l-20 6" stroke="#3b2a1a" stroke-width="5" stroke-linecap="round"/><circle cx="80" cy="100" r="6" fill="#3b2a1a"/><circle cx="120" cy="100" r="6" fill="#3b2a1a"/>'
+        : '<circle cx="80" cy="94" r="8" fill="#3b2a1a"/><circle cx="120" cy="94" r="8" fill="#3b2a1a"/><circle cx="83" cy="91" r="2.5" fill="#fff"/><circle cx="123" cy="91" r="2.5" fill="#fff"/>';
+    const mouth = happy
+      ? '<path d="M78 116 q22 26 44 0 z" fill="#c2410c"/><path d="M90 126 q10 6 20 0" fill="#fb7185"/>'
+      : sad
+        ? '<path d="M84 128 q16 -12 32 0" stroke="#3b2a1a" stroke-width="5" fill="none" stroke-linecap="round"/>'
+        : '<path d="M86 118 q14 12 28 0" stroke="#3b2a1a" stroke-width="5" fill="none" stroke-linecap="round"/>';
+    const arms = happy
+      ? '<path d="M40 110 q-20 -30 -10 -55" stroke="var(--mascot-dark)" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M160 110 q20 -30 10 -55" stroke="var(--mascot-dark)" stroke-width="12" fill="none" stroke-linecap="round"/>'
+      : sad
+        ? '<path d="M42 120 q-14 18 -6 38" stroke="var(--mascot-dark)" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M158 120 q14 18 6 38" stroke="var(--mascot-dark)" stroke-width="12" fill="none" stroke-linecap="round"/>'
+        : '<path d="M40 118 q-18 -6 -24 -24" stroke="var(--mascot-dark)" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M160 118 q18 6 22 22" stroke="var(--mascot-dark)" stroke-width="12" fill="none" stroke-linecap="round"/>';
+    const extra = happy
+      ? '<g fill="#facc15"><path d="M28 30 l4 10 10 1 -8 7 3 10 -9 -6 -9 6 3 -10 -8 -7 10 -1z"/><path d="M168 20 l3 8 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1z"/></g>'
+      : sad
+        ? '<path d="M128 108 q-6 12 0 18 q6 -6 0 -18z" fill="#60a5fa"/><g fill="#94a3b8" opacity=".8"><ellipse cx="160" cy="34" rx="22" ry="12"/><ellipse cx="144" cy="38" rx="14" ry="10"/></g>'
+        : '';
+    const bodyColor = sad ? '#f4c27a' : 'var(--mascot)';
+    return `<svg viewBox="0 0 200 200" role="img" aria-label="${happy ? '기뻐하는 말랑이' : sad ? '아쉬워하는 말랑이' : '말랑이'}">
+      <ellipse cx="100" cy="186" rx="56" ry="8" fill="#000" opacity=".08"/>
+      ${arms}
+      <path d="M100 30 C150 30 172 70 170 116 C168 160 140 180 100 180 C60 180 32 160 30 116 C28 70 50 30 100 30Z" fill="${bodyColor}" stroke="var(--mascot-dark)" stroke-width="4"/>
+      <path d="M96 30 q-6 -18 8 -22 q-2 12 6 22" fill="#4ade80" stroke="#16a34a" stroke-width="3"/>
+      <text x="100" y="72" text-anchor="middle" font-size="22" font-weight="800" fill="var(--mascot-dark)" font-family="inherit">가</text>
+      <ellipse cx="62" cy="114" rx="11" ry="7" fill="#fb7185" opacity=".55"/>
+      <ellipse cx="138" cy="114" rx="11" ry="7" fill="#fb7185" opacity=".55"/>
+      ${eyes}${mouth}${extra}
+    </svg>`;
+  }
+
+  function confetti() {
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const box = document.createElement('div');
+    box.className = 'confetti';
+    const colors = ['#f59f00', '#e8590c', '#40c057', '#4dabf7', '#cc5de8', '#ff6b6b'];
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('i');
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.background = colors[i % colors.length];
+      p.style.animationDelay = (Math.random() * 0.4) + 's';
+      p.style.animationDuration = (1.2 + Math.random() * 0.9) + 's';
+      box.appendChild(p);
+    }
+    document.body.appendChild(box);
+    setTimeout(() => box.remove(), 2600);
+  }
+
+  function toast(msg) {
+    const t = document.createElement('div');
+    t.className = 'toast'; t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2200);
+  }
+
+  // ───────── 화면 ─────────
+  const $ = (id) => document.getElementById(id);
+  const views = ['startView', 'gameView', 'doneView', 'teacherView'];
+  function show(v) { views.forEach((x) => $(x).classList.toggle('hidden', x !== v)); window.scrollTo(0, 0); }
+
+  for (let g = 1; g <= 6; g++) $('grade').add(new Option(g + '학년', g));
+  for (let c = 1; c <= 15; c++) $('cls').add(new Option(c + '반', c));
+  try {
+    const last = JSON.parse(safeGet('urimal.last') || 'null');
+    if (last) { $('grade').value = last.g; $('cls').value = last.c; }
+  } catch {}
+  $('startMascot').innerHTML = mascot('idle');
+
+  // ───────── 게임 ─────────
+  let G = null;
+
+  function monthRate(student) {
+    const st = aggregate()[skey(student.g, student.c, student.n)];
+    if (!st) return { c: 0, t: 0, r: 0 };
+    return sumMonths(st, [ymOf(new Date())]);
+  }
+
+  $('startForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const n = $('name').value.trim().replace(/\s+/g, ' ');
+    if (!n) { $('name').focus(); return; }
+    const student = { g: +$('grade').value, c: +$('cls').value, n };
+    safeSet('urimal.last', JSON.stringify({ g: student.g, c: student.c }));
+    startGame(student);
+  });
+
+  function startGame(student) {
+    const mr = monthRate(student);
+    G = { student, count: 0, right: 0, streak: 0, wrongRow: 0, retry: [], current: null, startRate: mr.t ? mr.r : null, rateUpShown: false, answered: false };
+    $('pWho').textContent = `${student.g}학년 ${student.c}반 ${student.n}`;
+    show('gameView');
+    nextQuestion();
+  }
+
+  function nextQuestion() {
+    const k = skey(G.student.g, G.student.c, G.student.n);
+    let q = null, isRetry = false;
+    const dueIdx = G.retry.findIndex((r) => r.due <= G.count);
+    if (dueIdx >= 0) { q = BANK[G.retry[dueIdx].id]; G.retry.splice(dueIdx, 1); isRetry = true; }
+    if (!q) {
+      let seen = new Set(S.seen[k] || []);
+      const waiting = new Set(G.retry.map((r) => r.id));
+      let pool = BANK.filter((b) => !seen.has(b.id) && !waiting.has(b.id) && (!G.current || b.id !== G.current.id));
+      if (!pool.length) { S.seen[k] = []; seen = new Set(); pool = BANK.filter((b) => !waiting.has(b.id) && (!G.current || b.id !== G.current.id)); }
+      q = pick(pool);
+      S.seen[k] = [...seen, q.id];
+      save();
+    }
+    G.current = q; G.isRetry = isRetry; G.answered = false;
+    G.count++;
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    const q = G.current;
+    $('qnum').innerHTML = `${G.count}번째 문제` + (G.isRetry ? '<span class="retry-tag">🔁 다시 도전 문제</span>' : '');
+    const s = $('sentence'); s.textContent = '';
+    q.text.split('___').forEach((part, i, arr) => {
+      s.appendChild(document.createTextNode(part));
+      if (i < arr.length - 1) { const b = document.createElement('span'); b.className = 'blank'; b.textContent = '?'; s.appendChild(b); }
+    });
+    const opts = Math.random() < 0.5 ? [q.answer, q.wrong] : [q.wrong, q.answer];
+    const box = $('options'); box.textContent = '';
+    opts.forEach((w, i) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'opt'; b.dataset.word = w;
+      b.innerHTML = `<span class="key">${i + 1}번</span>`;
+      b.appendChild(document.createTextNode(w));
+      b.addEventListener('click', () => answer(w));
+      box.appendChild(b);
+    });
+    $('feedback').classList.add('hidden');
+    $('cheer').classList.add('hidden');
+    updateStatus();
+  }
+
+  function updateStatus() {
+    $('pToday').textContent = `${G.right}/${G.count - (G.answered ? 0 : 1)}`;
+    const mr = monthRate(G.student);
+    $('pRate').textContent = mr.t ? Math.round(mr.r * 100) + '%' : '-';
+    $('pStreak').textContent = G.streak;
+  }
+
+  function answer(word) {
+    if (G.answered) return;
+    G.answered = true;
+    const q = G.current, ok = word === q.answer;
+    record(G.student, ok);
+    if (ok) { G.right++; G.streak++; G.wrongRow = 0; }
+    else { G.streak = 0; G.wrongRow++; G.retry.push({ id: q.id, due: G.count + 3 + Math.floor(Math.random() * 3) }); }
+
+    document.querySelectorAll('#options .opt').forEach((b) => {
+      b.disabled = true;
+      if (b.dataset.word === q.answer) b.classList.add('right');
+      else if (b.dataset.word === word) b.classList.add('wrong');
+    });
+    const blank = document.querySelector('#sentence .blank');
+    document.querySelectorAll('#sentence .blank').forEach((b) => { b.textContent = q.answer; });
+    if (blank) blank.style.color = 'var(--good)';
+
+    // 응원 메시지
+    let cheer = '';
+    if (ok && MSG.streak[G.streak]) cheer = MSG.streak[G.streak];
+    else if (!ok && G.wrongRow >= 2) cheer = pick(MSG.twoWrong);
+    else if (G.count % 10 === 0) cheer = pick(MSG.every).replace('{n}', G.count);
+    else if (ok && !G.rateUpShown && G.startRate !== null) {
+      const mr = monthRate(G.student);
+      if (mr.t >= 5 && mr.r > G.startRate + 0.001) { cheer = MSG.rateUp; G.rateUpShown = true; }
+    }
+    const ch = $('cheer');
+    ch.textContent = cheer; ch.classList.toggle('hidden', !cheer);
+
+    const fb = $('feedback');
+    fb.className = 'feedback ' + (ok ? 'fb-good' : 'fb-bad');
+    fb.innerHTML = `
+      <div class="mascot ${ok ? 'bounce' : 'droop'}">${mascot(ok ? 'happy' : 'sad')}</div>
+      <div>
+        <p class="fb-title"></p>
+        <p class="fb-msg" style="margin:0"></p>
+        <div class="tip">💡 <b>정답: <span class="fb-ans"></span></b><br><span class="fb-tip"></span></div>
+        <button class="btn btn-big" type="button" id="nextBtn">${ok ? '다음 문제 ▶' : '재도전! 다음 문제 ▶'}</button>
+      </div>`;
+    fb.querySelector('.fb-title').textContent = ok ? (G.isRetry ? '다시 도전 성공!' : '정답이에요!') : '아쉬워요!';
+    fb.querySelector('.fb-msg').textContent = ok ? pick(G.isRetry ? MSG.retryRight : MSG.right) : pick(MSG.wrong);
+    fb.querySelector('.fb-ans').textContent = q.answer;
+    fb.querySelector('.fb-tip').textContent = q.tip;
+    fb.querySelector('#nextBtn').addEventListener('click', nextQuestion);
+    if (ok) confetti();
+    updateStatus();
+    fb.querySelector('#nextBtn').focus({ preventScroll: true });
+    fb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if ($('gameView').classList.contains('hidden') || !G) return;
+    if (e.target && e.target.tagName === 'INPUT') return;
+    if (!G.answered && (e.key === '1' || e.key === '2')) {
+      const b = document.querySelectorAll('#options .opt')[+e.key - 1];
+      if (b) b.click();
+    }
+  });
+
+  $('quitBtn').addEventListener('click', () => {
+    const answered = G.count - (G.answered ? 0 : 1);
+    const mr = monthRate(G.student);
+    const good = answered > 0 && G.right / answered >= 0.7;
+    $('doneMascot').innerHTML = mascot(answered === 0 ? 'idle' : good ? 'happy' : 'idle');
+    $('doneTitle').textContent = answered === 0 ? '다음에 또 도전해요!' : `${G.student.n}, 오늘 ${answered}문제 중 ${G.right}문제를 맞혔어요!`;
+    $('doneText').textContent = (mr.t ? `이번 달 누적: ${mr.t}문제 도전, ${mr.ok}문제 정답 (승률 ${Math.round(mr.r * 100)}%). ` : '') +
+      (good ? '정말 잘했어요! 이 실력으로 시상대에 올라가 봐요! 🏆' : '도전할수록 승률이 올라가요. 내일 또 만나요! 💪');
+    show('doneView');
+  });
+  $('againBtn').addEventListener('click', () => startGame(G.student));
+  $('homeBtn').addEventListener('click', () => { $('name').value = ''; show('startView'); });
+
+  // ───────── 선생님 · 시상 ─────────
+  let unlocked = false;
+  function openTeacher() {
+    show('teacherView');
+    const pin = safeGet('urimal.pin');
+    $('pinBox').classList.toggle('hidden', unlocked);
+    $('teacherBody').classList.toggle('hidden', !unlocked);
+    $('pinMsg').textContent = pin ? '선생님 비밀번호를 입력하세요.' : '처음 사용하시네요. 학생들이 기록을 지우지 못하도록 선생님 비밀번호(숫자 4자리 이상)를 정해 주세요.';
+    $('pinInput').value = '';
+    if (!unlocked) $('pinInput').focus(); else renderAwards();
+  }
+  $('teacherBtn').addEventListener('click', openTeacher);
+  $('closeTeacher').addEventListener('click', () => show('startView'));
+  function tryPin() {
+    const v = $('pinInput').value.trim();
+    const pin = safeGet('urimal.pin');
+    if (!pin) {
+      if (!/^\d{4,8}$/.test(v)) { toast('숫자 4~8자리로 정해 주세요'); return; }
+      safeSet('urimal.pin', v); toast('비밀번호를 정했어요');
+    } else if (v !== pin) { toast('비밀번호가 달라요'); $('pinInput').select(); return; }
+    unlocked = true;
+    $('pinBox').classList.add('hidden');
+    $('teacherBody').classList.remove('hidden');
+    renderAwards();
+  }
+  $('pinOk').addEventListener('click', tryPin);
+  $('pinInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') tryPin(); });
+
+  const PER = periods();
+  PER.forEach((p) => $('fPeriod').add(new Option(p.label, p.id)));
+  ['fPeriod', 'fGrade', 'fCls'].forEach((id) => $(id).addEventListener('change', renderAwards));
+
+  function fillFilter(sel, values, suffix, allLabel) {
+    const cur = sel.value;
+    sel.textContent = '';
+    sel.add(new Option(allLabel, ''));
+    values.forEach((v) => sel.add(new Option(v + suffix, v)));
+    if ([...sel.options].some((o) => o.value === cur)) sel.value = cur;
+  }
+
+  function currentRows() {
+    const p = PER.find((x) => x.id === $('fPeriod').value) || PER[0];
+    const agg = Object.values(aggregate());
+    fillFilter($('fGrade'), [...new Set(agg.map((s) => s.g))].sort((a, b) => a - b), '학년', '전체 학년');
+    fillFilter($('fCls'), [...new Set(agg.filter((s) => !$('fGrade').value || s.g == $('fGrade').value).map((s) => s.c))].sort((a, b) => a - b), '반', '전체 반');
+    const fg = $('fGrade').value, fc = $('fCls').value;
+    const rows = agg
+      .filter((s) => (!fg || s.g == fg) && (!fc || s.c == fc))
+      .map((s) => {
+        const cur = sumMonths(s, p.months);
+        const prev = p.prevMonths ? sumMonths(s, p.prevMonths) : null;
+        return { ...s, ...cur, prev };
+      })
+      .filter((r) => r.t > 0)
+      .sort((a, b) => b.ok - a.ok || b.r - a.r || b.t - a.t || a.n.localeCompare(b.n, 'ko'));
+    return { p, rows };
+  }
+
+  const who = (r) => `${r.g}-${r.c} ${r.n}`;
+  const pct = (x) => Math.round(x * 100) + '%';
+
+  function renderAwards() {
+    const { p, rows } = currentRows();
+    const aw = $('awards'); aw.textContent = '';
+    const cards = [];
+    if (rows.length) {
+      cards.push({ medal: '🥇', t: '정답왕', r: rows[0], d: (r) => `${r.ok}문제 정답` });
+      const acc = rows.filter((r) => r.t >= 20).sort((a, b) => b.r - a.r || b.t - a.t)[0];
+      cards.push({ medal: '🎯', t: '정확도상', r: acc, d: (r) => `승률 ${pct(r.r)} (${r.t}문제)`, empty: '20문제 이상 도전한 학생이 아직 없어요' });
+      const eff = [...rows].sort((a, b) => b.t - a.t)[0];
+      cards.push({ medal: '💪', t: '끈기상', r: eff, d: (r) => `${r.t}문제 도전` });
+      if (p.prevMonths) {
+        const gr = rows.filter((r) => r.t >= 10 && r.prev && r.prev.t >= 10 && r.r > r.prev.r)
+          .sort((a, b) => (b.r - b.prev.r) - (a.r - a.prev.r))[0];
+        cards.push({ medal: '📈', t: '성장상', r: gr, d: (r) => `${pct(r.prev.r)} → ${pct(r.r)}`, empty: '두 달 연속 10문제 이상 도전한 학생 중 승률이 오른 학생이 없어요' });
+      }
+    }
+    if (!cards.length) {
+      aw.innerHTML = '<p class="muted">이 기간에는 아직 기록이 없어요. 학생들이 도전하면 여기에 수상자가 나타나요!</p>';
+    }
+    cards.forEach((c) => {
+      const el = document.createElement('div'); el.className = 'award';
+      el.innerHTML = `<div class="medal">${c.medal}</div><div class="t"></div><div class="who"></div><div class="d"></div>`;
+      el.querySelector('.t').textContent = c.t;
+      el.querySelector('.who').textContent = c.r ? who(c.r) : '-';
+      el.querySelector('.d').textContent = c.r ? c.d(c.r) : (c.empty || '');
+      aw.appendChild(el);
+    });
+
+    const tb = $('rankTable'); tb.textContent = '';
+    if (!rows.length) return;
+    tb.innerHTML = '<thead><tr><th class="num">순위</th><th>학년·반</th><th>이름</th><th class="num">정답</th><th class="num">도전</th><th class="num">승률</th><th></th></tr></thead><tbody></tbody>';
+    const body = tb.querySelector('tbody');
+    let rank = 0, prevKey = '';
+    rows.forEach((r, i) => {
+      const k = r.ok + '|' + r.r;
+      if (k !== prevKey) { rank = i + 1; prevKey = k; }
+      const tr = document.createElement('tr');
+      const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+      tr.innerHTML = `<td class="num"></td><td></td><td></td><td class="num"></td><td class="num"></td><td class="num"></td><td><div class="bar"><span></span></div></td>`;
+      const td = tr.children;
+      td[0].textContent = medal; td[1].textContent = `${r.g}학년 ${r.c}반`; td[2].textContent = r.n;
+      td[3].textContent = r.ok; td[4].textContent = r.t; td[5].textContent = pct(r.r);
+      td[6].querySelector('span').style.width = pct(r.r);
+      body.appendChild(tr);
+    });
+  }
+
+  function download(filename, text, type) {
+    const blob = new Blob([text], { type });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+  const today = () => { const d = new Date(); return d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()); };
+
+  $('csvBtn').addEventListener('click', () => {
+    const { p, rows } = currentRows();
+    if (!rows.length) { toast('저장할 기록이 없어요'); return; }
+    const esc = (v) => '"' + String(v).replace(/"/g, '""') + '"';
+    const lines = [['순위', '학년', '반', '이름', '정답', '도전', '승률(%)'].map(esc).join(',')];
+    rows.forEach((r, i) => lines.push([i + 1, r.g, r.c, r.n, r.ok, r.t, Math.round(r.r * 100)].map(esc).join(',')));
+    download(`우리말겨루기_${p.label.replace(/[^\w가-힣~]+/g, '_')}_${today()}.csv`, '﻿' + lines.join('\r\n'), 'text/csv;charset=utf-8');
+  });
+
+  $('backupBtn').addEventListener('click', () => {
+    const data = { app: 'urimal', version: 1, exportedAt: Date.now(), devices: S.devices };
+    download(`우리말겨루기_백업_${today()}.json`, JSON.stringify(data), 'application/json');
+  });
+
+  $('importBtn').addEventListener('click', () => $('importFile').click());
+  $('importFile').addEventListener('change', async (e) => {
+    const f = e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    try {
+      const data = JSON.parse(await f.text());
+      if (!data || data.app !== 'urimal' || typeof data.devices !== 'object') throw new Error('bad');
+      let merged = 0;
+      for (const [id, dev] of Object.entries(data.devices)) {
+        if (!dev || typeof dev.students !== 'object') continue;
+        const mine = S.devices[id];
+        if (!mine || (dev.updatedAt || 0) > (mine.updatedAt || 0)) { S.devices[id] = dev; merged++; }
+      }
+      save(); renderAwards();
+      toast(merged ? `기기 ${merged}대의 기록을 합쳤어요` : '이미 최신 기록이에요');
+    } catch { toast('우리말 겨루기 백업 파일이 아니에요'); }
+  });
+
+  $('resetBtn').addEventListener('click', () => {
+    if (!confirm('이 기기에 저장된 모든 학생 기록을 지울까요?\n지우기 전에 [백업 파일 저장]을 먼저 해 두면 안전해요.')) return;
+    if (!confirm('정말 지울까요? 되돌릴 수 없어요.')) return;
+    S.devices = { [S.deviceId]: { updatedAt: Date.now(), students: {} } };
+    S.seen = {};
+    save(); renderAwards(); toast('기록을 모두 지웠어요');
+  });
+
+  if (!storageOk) toast('이 브라우저는 기록 저장이 막혀 있어요');
+})();
+</script>
+</body>
+</html>
