@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>랜덤 발표자 뽑기</title>
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --text: #1b2333;
+    --muted: #5b6577;
+    --line: #d6dbe6;
+    --accent: #2457d6;
+    --accent-press: #1a44ad;
+    --accent-soft: #e6edfc;
+    --done: #157347;
+    --done-soft: #e3f4ea;
+    --chip: #eef1f7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #11151d;
+      --card: #1b2130;
+      --text: #f1f4fa;
+      --muted: #a4adbf;
+      --line: #333c50;
+      --accent: #7ea4ff;
+      --accent-press: #4774e0;
+      --accent-soft: #1f2c4d;
+      --done: #4cc38a;
+      --done-soft: #183427;
+      --chip: #262e40;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", "Noto Sans KR", system-ui, sans-serif;
+    font-size: 18px;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+  }
+  .wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px 16px 40px;
+  }
+  h1 {
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    margin: 0 0 16px;
+    letter-spacing: -0.02em;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  @media (min-width: 900px) {
+    .layout { grid-template-columns: 340px 1fr; align-items: start; }
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 18px;
+  }
+  label.title {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  textarea {
+    width: 100%;
+    min-height: 180px;
+    resize: vertical;
+    font: inherit;
+    font-size: 1.05rem;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px;
+  }
+  textarea:focus { outline: 3px solid var(--accent-soft); border-color: var(--accent); }
+  .hint { color: var(--muted); font-size: 0.95rem; margin: 8px 0 0; }
+
+  .stage {
+    text-align: center;
+    padding: 20px 18px 22px;
+  }
+  .count {
+    display: inline-block;
+    font-size: clamp(1.1rem, 2.6vw, 1.5rem);
+    font-weight: 700;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 6px 18px;
+    border-radius: 999px;
+  }
+  .count.all-done { background: var(--done-soft); color: var(--done); }
+
+  .avatar {
+    width: clamp(150px, min(32vw, 34vh), 270px);
+    aspect-ratio: 1 / 1;
+    margin: 16px auto 0;
+  }
+  .avatar svg { width: 100%; height: 100%; display: block; }
+  .avatar.rolling { filter: saturate(0.35); opacity: 0.75; }
+  .avatar.pop { animation: bounce 0.6s cubic-bezier(.3,1.6,.5,1); }
+  @keyframes bounce {
+    0% { transform: scale(0.4) rotate(-12deg); opacity: 0; }
+    60% { transform: scale(1.08) rotate(4deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0); }
+  }
+
+  .name {
+    min-height: 1.2em;
+    margin: 6px 0 0;
+    font-size: clamp(2.8rem, min(11vw, 13vh), 7rem);
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+  .name.placeholder { color: var(--muted); font-size: clamp(1.6rem, 5vw, 2.6rem); font-weight: 700; }
+  .name.rolling { color: var(--muted); }
+  .name.pop { animation: pop 0.35s ease-out; }
+  @keyframes pop {
+    0% { transform: scale(0.85); opacity: 0.4; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .nickname {
+    min-height: 1.5em;
+    margin: 2px 0 6px;
+    font-size: clamp(1.1rem, 3vw, 1.6rem);
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .message {
+    min-height: 1.6em;
+    font-size: clamp(1.1rem, 3vw, 1.6rem);
+    font-weight: 700;
+    color: var(--done);
+    margin: 0 0 14px;
+  }
+  .buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  button {
+    font: inherit;
+    font-weight: 800;
+    border-radius: 14px;
+    cursor: pointer;
+    min-height: 64px;
+    padding: 0 28px;
+    touch-action: manipulation;
+  }
+  button:focus-visible { outline: 4px solid var(--accent-soft); outline-offset: 2px; }
+  .btn-draw {
+    flex: 2 1 220px;
+    max-width: 420px;
+    font-size: 1.6rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+  }
+  @media (prefers-color-scheme: dark) { .btn-draw { color: #0d1424; } }
+  .btn-draw:active { background: var(--accent-press); }
+  .btn-reset {
+    flex: 1 1 140px;
+    max-width: 220px;
+    font-size: 1.25rem;
+    background: transparent;
+    color: var(--text);
+    border: 2px solid var(--line);
+  }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .history { margin-top: 16px; }
+  .history h2 { font-size: 1.1rem; margin: 0 0 10px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 0; }
+  .chips li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--chip);
+    border-radius: 999px;
+    padding: 3px 14px 3px 4px;
+    font-size: 1.05rem;
+  }
+  .chips li .mini { width: 32px; height: 32px; flex: none; }
+  .chips li .mini svg { width: 100%; height: 100%; display: block; }
+  .chips li .num { color: var(--muted); font-size: 0.9rem; }
+  .empty { color: var(--muted); margin: 0; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .name.pop, .avatar.pop { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>랜덤 발표자 뽑기</h1>
+
+  <div class="layout">
+    <section class="card">
+      <label class="title" for="names">학생 이름</label>
+      <textarea id="names" placeholder="예) 김민준, 이서연, 박지호&#10;또는 한 줄에 한 명씩 입력" autocomplete="off" spellcheck="false"></textarea>
+      <p class="hint" id="nameInfo">쉼표(,)나 줄바꿈으로 구분해 주세요.</p>
+      <p class="hint">입력한 이름은 이 화면에만 있고 저장되거나 전송되지 않습니다. 창을 닫으면 사라집니다.</p>
+    </section>
+
+    <div>
+      <section class="card stage" aria-live="polite">
+        <div class="count" id="count">이름을 입력해 주세요</div>
+        <div class="avatar" id="avatar"></div>
+        <div class="name placeholder" id="picked">누가 뽑힐까요?</div>
+        <p class="nickname" id="nickname"></p>
+        <p class="message" id="message"></p>
+        <div class="buttons">
+          <button type="button" class="btn-draw" id="drawBtn">뽑기</button>
+          <button type="button" class="btn-reset" id="resetBtn">초기화</button>
+        </div>
+      </section>
+
+      <section class="card history">
+        <h2>뽑힌 순서</h2>
+        <ol class="chips" id="history"></ol>
+        <p class="empty" id="historyEmpty">아직 뽑힌 사람이 없습니다.</p>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // 모든 데이터는 이 페이지의 메모리에만 존재합니다. 저장·전송하지 않습니다.
+
+  /* ---------- 이름 → 캐릭터 생성기 ----------
+     이름을 숫자로 바꿔 씨앗값으로 쓰므로, 같은 이름은 언제나 같은 캐릭터가 나옵니다.
+     그림은 모두 이 파일 안에서 SVG로 그립니다(외부 이미지·인터넷 사용 없음). */
+  function hashStr(s) {
+    var h = 2166136261 >>> 0;
+    for (var i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+  function seeded(a) {
+    return function () {
+      a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function pick(r, arr) { return arr[Math.floor(r() * arr.length)]; }
+
+  var ADJ = ['반짝이는', '용감한', '느긋한', '엉뚱한', '다정한', '번뜩이는', '씩씩한', '신비로운',
+             '명랑한', '침착한', '열정적인', '당당한', '상냥한', '기발한', '활기찬', '꿈꾸는',
+             '똑똑한', '유쾌한', '든든한', '자유로운'];
+  var ROLE = ['우주 탐험가', '별빛 마법사', '숲속 수호자', '구름 요정', '아이디어 발명가', '바다 항해사',
+              '무지개 화가', '번개 기사', '달빛 시인', '꿀벌 박사', '용 조련사', '보물 사냥꾼',
+              '시간 여행자', '노을 음악가', '꽃밭 정원사', '수수께끼 탐정', '눈꽃 요리사', '바람 우체부'];
+
+  function star4(x, y, s) {
+    return 'M' + x + ' ' + (y - s) + ' Q' + x + ' ' + y + ' ' + (x + s) + ' ' + y +
+           ' Q' + x + ' ' + y + ' ' + x + ' ' + (y + s) + ' Q' + x + ' ' + y + ' ' + (x - s) + ' ' + y +
+           ' Q' + x + ' ' + y + ' ' + x + ' ' + (y - s) + 'Z';
+  }
+  function star5(cx, cy, R, rr) {
+    var p = [];
+    for (var i = 0; i < 10; i++) {
+      var rad = i % 2 ? rr : R, ang = -Math.PI / 2 + i * Math.PI / 5;
+      p.push((cx + rad * Math.cos(ang)).toFixed(1) + ',' + (cy + rad * Math.sin(ang)).toFixed(1));
+    }
+    return p.join(' ');
+  }
+
+  function makeCharacter(name) {
+    var r = seeded(hashStr(name));
+    var hue = Math.floor(r() * 360);
+    var sat = 55 + Math.floor(r() * 25);
+    var body = 'hsl(' + hue + ',' + sat + '%,68%)';
+    var inner = 'hsl(' + hue + ',' + sat + '%,84%)';
+    var ink = 'hsl(' + hue + ',40%,20%)';
+    var bgHue = (hue + 150 + Math.floor(r() * 60)) % 360;
+    var bg = 'hsl(' + bgHue + ',70%,90%)';
+    var bgDeco = 'hsl(' + bgHue + ',65%,74%)';
+    var acc = 'hsl(' + ((hue + 90 + Math.floor(r() * 180)) % 360) + ',78%,60%)';
+    var GOLD = '#FFC83D', GOLD_INK = '#9A6400';
+
+    var shape = pick(r, ['round', 'squircle', 'egg', 'slime']);
+    var ears = pick(r, ['none', 'none', 'cat', 'bear', 'bunny']);
+    var eyes = pick(r, ['dot', 'big', 'happy', 'sparkle', 'wink', 'calm']);
+    var mouth = pick(r, ['smile', 'open', 'cat', 'o', 'grin']);
+    var acc1 = pick(r, ['none', 'crown', 'party', 'glasses', 'shades', 'headphones', 'bow',
+                        'sprout', 'antenna', 'halo', 'beret', 'starclip']);
+    var cheeks = r() < 0.7;
+    var freckles = r() < 0.25;
+    var arms = r() < 0.55;
+    var spots = [[28, 40], [172, 36], [24, 158], [176, 164], [168, 104], [32, 100]];
+    var nick = pick(r, ADJ) + ' ' + pick(r, ROLE);
+
+    var s = '<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + nick + ' 캐릭터">';
+    s += '<circle cx="100" cy="100" r="98" fill="' + bg + '"/>';
+    for (var i = 0; i < 3; i++) {
+      var sp = spots[Math.floor(r() * spots.length)];
+      s += '<path d="' + star4(sp[0], sp[1], 6 + Math.floor(r() * 6)) + '" fill="' + bgDeco + '"/>';
+    }
+
+    var st = ' stroke="' + ink + '" stroke-width="4" stroke-linejoin="round"';
+
+    // 팔 (머리 뒤)
+    if (arms) {
+      s += '<ellipse cx="40" cy="152" rx="12" ry="19" transform="rotate(35 40 152)" fill="' + body + '"' + st + '/>';
+      s += '<ellipse cx="160" cy="152" rx="12" ry="19" transform="rotate(-35 160 152)" fill="' + body + '"' + st + '/>';
+    }
+    // 귀 (머리 뒤)
+    if (ears === 'cat') {
+      s += '<path d="M50 88 L46 30 L92 56 Z" fill="' + body + '"' + st + '/><path d="M150 88 L154 30 L108 56 Z" fill="' + body + '"' + st + '/>';
+      s += '<path d="M56 74 L54 44 L80 58 Z" fill="' + inner + '"/><path d="M144 74 L146 44 L120 58 Z" fill="' + inner + '"/>';
+    } else if (ears === 'bear') {
+      s += '<circle cx="52" cy="62" r="22" fill="' + body + '"' + st + '/><circle cx="148" cy="62" r="22" fill="' + body + '"' + st + '/>';
+      s += '<circle cx="52" cy="62" r="11" fill="' + inner + '"/><circle cx="148" cy="62" r="11" fill="' + inner + '"/>';
+    } else if (ears === 'bunny') {
+      s += '<ellipse cx="76" cy="40" rx="15" ry="36" transform="rotate(-10 76 40)" fill="' + body + '"' + st + '/>';
+      s += '<ellipse cx="124" cy="40" rx="15" ry="36" transform="rotate(10 124 40)" fill="' + body + '"' + st + '/>';
+      s += '<ellipse cx="76" cy="42" rx="7" ry="24" transform="rotate(-10 76 42)" fill="' + inner + '"/>';
+      s += '<ellipse cx="124" cy="42" rx="7" ry="24" transform="rotate(10 124 42)" fill="' + inner + '"/>';
+    }
+
+    // 머리
+    if (shape === 'round') s += '<circle cx="100" cy="112" r="62" fill="' + body + '"' + st + '/>';
+    else if (shape === 'squircle') s += '<rect x="38" y="52" width="124" height="120" rx="44" fill="' + body + '"' + st + '/>';
+    else if (shape === 'egg') s += '<path d="M100 48 C140 48 162 80 162 118 C162 150 136 172 100 172 C64 172 38 150 38 118 C38 80 60 48 100 48Z" fill="' + body + '"' + st + '/>';
+    else s += '<path d="M100 56 C138 56 160 92 166 140 C170 166 150 172 100 172 C50 172 30 166 34 140 C40 92 62 56 100 56Z" fill="' + body + '"' + st + '/>';
+    s += '<ellipse cx="72" cy="78" rx="13" ry="7" transform="rotate(-30 72 78)" fill="#fff" opacity=".45"/>';
+    s += '<ellipse cx="100" cy="156" rx="32" ry="10" fill="#fff" opacity=".18"/>';
+
+    // 볼, 주근깨
+    if (cheeks) {
+      s += '<ellipse cx="64" cy="130" rx="11" ry="7" fill="hsl(350,85%,72%)" opacity=".75"/>';
+      s += '<ellipse cx="136" cy="130" rx="11" ry="7" fill="hsl(350,85%,72%)" opacity=".75"/>';
+    }
+    if (freckles) {
+      [[58, 122], [66, 126], [60, 131], [142, 122], [134, 126], [140, 131]].forEach(function (p) {
+        s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="1.8" fill="' + ink + '" opacity=".4"/>';
+      });
+    }
+
+    // 눈
+    function eye(x, y, style) {
+      var o = '';
+      if (style === 'dot') {
+        o += '<circle cx="' + x + '" cy="' + y + '" r="8" fill="' + ink + '"/>';
+        o += '<circle cx="' + (x + 2.5) + '" cy="' + (y - 3) + '" r="2.6" fill="#fff"/>';
+      } else if (style === 'big') {
+        o += '<circle cx="' + x + '" cy="' + y + '" r="14" fill="#fff" stroke="' + ink + '" stroke-width="3"/>';
+        o += '<circle cx="' + (x + 1) + '" cy="' + (y + 2) + '" r="8" fill="' + ink + '"/>';
+        o += '<circle cx="' + (x + 4) + '" cy="' + (y - 2) + '" r="3" fill="#fff"/>';
+      } else if (style === 'happy') {
+        o += '<path d="M' + (x - 10) + ' ' + (y + 4) + ' Q' + x + ' ' + (y - 10) + ' ' + (x + 10) + ' ' + (y + 4) + '" fill="none" stroke="' + ink + '" stroke-width="4.5" stroke-linecap="round"/>';
+      } else if (style === 'sparkle') {
+        o += '<path d="' + star4(x, y, 11) + '" fill="' + ink + '"/>';
+        o += '<circle cx="' + (x + 3) + '" cy="' + (y - 3) + '" r="1.8" fill="#fff"/>';
+      } else {
+        o += '<path d="M' + (x - 10) + ' ' + y + ' Q' + x + ' ' + (y + 7) + ' ' + (x + 10) + ' ' + y + '" fill="none" stroke="' + ink + '" stroke-width="4.5" stroke-linecap="round"/>';
+      }
+      return o;
+    }
+    if (eyes === 'wink') s += eye(78, 108, 'dot') + eye(122, 108, 'happy');
+    else s += eye(78, 108, eyes) + eye(122, 108, eyes);
+
+    // 입
+    var ml = ' fill="none" stroke="' + ink + '" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"';
+    if (mouth === 'smile') s += '<path d="M86 136 Q100 150 114 136"' + ml + '/>';
+    else if (mouth === 'open') {
+      s += '<path d="M86 134 Q100 160 114 134 Z" fill="' + ink + '" stroke="' + ink + '" stroke-width="3" stroke-linejoin="round"/>';
+      s += '<ellipse cx="100" cy="146" rx="6" ry="3.5" fill="hsl(350,80%,70%)"/>';
+    } else if (mouth === 'cat') s += '<path d="M88 136 Q94 145 100 136 Q106 145 112 136"' + ml + '/>';
+    else if (mouth === 'o') s += '<ellipse cx="100" cy="140" rx="6" ry="7" fill="' + ink + '"/>';
+    else s += '<path d="M84 134 H116 Q116 152 100 152 Q84 152 84 134 Z" fill="#fff" stroke="' + ink + '" stroke-width="3.5" stroke-linejoin="round"/>';
+
+    // 소품
+    var as = ' stroke="' + ink + '" stroke-width="3" stroke-linejoin="round"';
+    if (acc1 === 'crown') {
+      s += '<path d="M68 60 L64 26 L84 44 L100 18 L116 44 L136 26 L132 60 Z" fill="' + GOLD + '" stroke="' + GOLD_INK + '" stroke-width="3" stroke-linejoin="round"/>';
+      s += '<circle cx="100" cy="48" r="5" fill="' + acc + '"/><circle cx="80" cy="52" r="3.5" fill="#fff"/><circle cx="120" cy="52" r="3.5" fill="#fff"/>';
+    } else if (acc1 === 'party') {
+      s += '<path d="M76 62 L100 6 L124 62 Z" fill="' + acc + '"' + as + '/>';
+      s += '<path d="M88 34 L112 34 M82 50 L118 50" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".8"/>';
+      s += '<circle cx="100" cy="7" r="7" fill="#fff"' + as + '/>';
+    } else if (acc1 === 'glasses') {
+      s += '<circle cx="78" cy="108" r="18" fill="#fff" fill-opacity=".2" stroke="' + ink + '" stroke-width="4"/>';
+      s += '<circle cx="122" cy="108" r="18" fill="#fff" fill-opacity=".2" stroke="' + ink + '" stroke-width="4"/>';
+      s += '<path d="M96 106 Q100 101 104 106" fill="none" stroke="' + ink + '" stroke-width="4"/>';
+    } else if (acc1 === 'shades') {
+      s += '<path d="M56 98 H98 Q98 122 78 122 Q56 122 56 98 Z M102 98 H144 Q144 122 122 122 Q102 122 102 98 Z" fill="' + ink + '"/>';
+      s += '<path d="M96 100 H104" stroke="' + ink + '" stroke-width="4"/>';
+      s += '<path d="M64 104 L72 104 M110 104 L118 104" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".7"/>';
+    } else if (acc1 === 'headphones') {
+      s += '<path d="M38 112 A62 62 0 0 1 162 112" fill="none" stroke="' + acc + '" stroke-width="9"/>';
+      s += '<path d="M38 112 A62 62 0 0 1 162 112" fill="none" stroke="' + ink + '" stroke-width="2" opacity=".35"/>';
+      s += '<rect x="26" y="96" width="20" height="34" rx="9" fill="' + acc + '"' + as + '/>';
+      s += '<rect x="154" y="96" width="20" height="34" rx="9" fill="' + acc + '"' + as + '/>';
+    } else if (acc1 === 'bow') {
+      s += '<path d="M146 62 L124 48 L126 76 Z" fill="' + acc + '"' + as + '/><path d="M146 62 L168 48 L166 76 Z" fill="' + acc + '"' + as + '/>';
+      s += '<circle cx="146" cy="62" r="7" fill="' + acc + '"' + as + '/>';
+    } else if (acc1 === 'sprout') {
+      s += '<path d="M100 54 Q98 40 100 30" fill="none" stroke="#2f7d3b" stroke-width="4" stroke-linecap="round"/>';
+      s += '<path d="M100 30 Q86 12 74 24 Q88 38 100 30 Z" fill="#5cc46a" stroke="#2f7d3b" stroke-width="2.5"/>';
+      s += '<path d="M100 30 Q114 12 126 24 Q112 38 100 30 Z" fill="#5cc46a" stroke="#2f7d3b" stroke-width="2.5"/>';
+    } else if (acc1 === 'antenna') {
+      s += '<path d="M100 52 L100 24" stroke="' + ink + '" stroke-width="4" stroke-linecap="round"/>';
+      s += '<circle cx="100" cy="18" r="14" fill="' + acc + '" opacity=".3"/>';
+      s += '<circle cx="100" cy="18" r="8" fill="' + acc + '"' + as + '/>';
+    } else if (acc1 === 'halo') {
+      s += '<ellipse cx="100" cy="30" rx="32" ry="8" fill="none" stroke="' + GOLD + '" stroke-width="7"/>';
+      s += '<ellipse cx="100" cy="30" rx="32" ry="8" fill="none" stroke="' + GOLD_INK + '" stroke-width="1.5" opacity=".5"/>';
+    } else if (acc1 === 'beret') {
+      s += '<path d="M95 42 L97 32" stroke="' + ink + '" stroke-width="4" stroke-linecap="round"/>';
+      s += '<ellipse cx="94" cy="56" rx="48" ry="15" transform="rotate(-8 94 56)" fill="' + acc + '"' + as + '/>';
+    } else if (acc1 === 'starclip') {
+      s += '<polygon points="' + star5(142, 70, 15, 6.5) + '" fill="' + GOLD + '" stroke="' + GOLD_INK + '" stroke-width="2.5" stroke-linejoin="round"/>';
+    }
+
+    s += '</svg>';
+    return { svg: s, nick: nick };
+  }
+
+  var MYSTERY_SVG =
+    '<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+    '<circle cx="100" cy="100" r="98" style="fill:var(--chip)"/>' +
+    '<circle cx="100" cy="112" r="62" style="fill:var(--line)"/>' +
+    '<text x="100" y="136" text-anchor="middle" font-size="72" font-weight="800" style="fill:var(--muted)" font-family="system-ui, sans-serif">?</text>' +
+    '</svg>';
+
+  /* ---------- 뽑기 ---------- */
+  var namesEl = document.getElementById('names');
+  var nameInfoEl = document.getElementById('nameInfo');
+  var countEl = document.getElementById('count');
+  var avatarEl = document.getElementById('avatar');
+  var pickedEl = document.getElementById('picked');
+  var nicknameEl = document.getElementById('nickname');
+  var messageEl = document.getElementById('message');
+  var drawBtn = document.getElementById('drawBtn');
+  var resetBtn = document.getElementById('resetBtn');
+  var historyEl = document.getElementById('history');
+  var historyEmptyEl = document.getElementById('historyEmpty');
+
+  var allNames = [];   // 중복·빈 칸이 제거된 전체 명단
+  var drawn = [];      // 뽑힌 순서
+  var rolling = false;
+
+  function parseNames(text) {
+    var seen = Object.create(null);
+    var list = [];
+    var dupes = 0;
+    text.split(/[,，、\n\r]+/).forEach(function (raw) {
+      var name = raw.replace(/\s+/g, ' ').trim();
+      if (!name) return;               // 빈 칸 무시
+      if (seen[name]) { dupes++; return; } // 중복은 한 번만
+      seen[name] = true;
+      list.push(name);
+    });
+    return { list: list, dupes: dupes };
+  }
+
+  function remaining() {
+    return allNames.filter(function (n) { return drawn.indexOf(n) === -1; });
+  }
+
+  function randomIndex(max) {
+    if (window.crypto && window.crypto.getRandomValues) {
+      var buf = new Uint32Array(1);
+      var limit = Math.floor(0x100000000 / max) * max; // 편향 없는 난수
+      do { window.crypto.getRandomValues(buf); } while (buf[0] >= limit);
+      return buf[0] % max;
+    }
+    return Math.floor(Math.random() * max);
+  }
+
+  function render() {
+    var left = remaining();
+    var total = allNames.length;
+
+    if (total === 0) {
+      countEl.textContent = '이름을 입력해 주세요';
+      countEl.classList.remove('all-done');
+    } else if (left.length === 0) {
+      countEl.textContent = '남은 인원 0명 / 전체 ' + total + '명';
+      countEl.classList.add('all-done');
+    } else {
+      countEl.textContent = '남은 인원 ' + left.length + '명 / 전체 ' + total + '명';
+      countEl.classList.remove('all-done');
+    }
+
+    if (total > 0 && left.length === 0 && !rolling) {
+      messageEl.textContent = '모든 학생이 뽑혔습니다! 다시 하려면 ‘초기화’를 눌러 주세요.';
+    } else {
+      messageEl.textContent = '';
+    }
+
+    drawBtn.disabled = rolling || left.length === 0;
+    resetBtn.disabled = rolling || drawn.length === 0;
+
+    historyEl.innerHTML = '';
+    drawn.forEach(function (n, i) {
+      var li = document.createElement('li');
+      var mini = document.createElement('span');
+      mini.className = 'mini';
+      mini.innerHTML = makeCharacter(n).svg; // SVG에는 이름 글자가 들어가지 않음
+      var num = document.createElement('span');
+      num.className = 'num';
+      num.textContent = (i + 1) + '.';
+      li.appendChild(mini);
+      li.appendChild(num);
+      li.appendChild(document.createTextNode(n));
+      historyEl.appendChild(li);
+    });
+    historyEmptyEl.style.display = drawn.length ? 'none' : '';
+  }
+
+  function showPlaceholder() {
+    avatarEl.className = 'avatar';
+    avatarEl.innerHTML = MYSTERY_SVG;
+    pickedEl.className = 'name placeholder';
+    pickedEl.textContent = '누가 뽑힐까요?';
+    nicknameEl.textContent = '';
+  }
+
+  function onNamesChange() {
+    var parsed = parseNames(namesEl.value);
+    allNames = parsed.list;
+    // 명단에서 지워진 이름은 뽑힌 기록에서도 뺍니다.
+    drawn = drawn.filter(function (n) { return allNames.indexOf(n) !== -1; });
+
+    var info = '쉼표(,)나 줄바꿈으로 구분해 주세요.';
+    if (allNames.length) {
+      info = '인식된 이름 ' + allNames.length + '명';
+      if (parsed.dupes) info += ' (중복 ' + parsed.dupes + '개는 한 번만 넣었어요)';
+    }
+    nameInfoEl.textContent = info;
+    render();
+  }
+
+  function draw() {
+    var left = remaining();
+    if (rolling || left.length === 0) return;
+
+    var winner = left[randomIndex(left.length)];
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function finish() {
+      rolling = false;
+      drawn.push(winner);
+      var ch = makeCharacter(winner);
+      avatarEl.className = 'avatar';
+      avatarEl.innerHTML = ch.svg;
+      pickedEl.className = 'name';
+      pickedEl.textContent = winner;
+      nicknameEl.textContent = ch.nick;
+      void pickedEl.offsetWidth; // 애니메이션 재시작
+      avatarEl.classList.add('pop');
+      pickedEl.classList.add('pop');
+      render();
+    }
+
+    if (reduce || left.length === 1) { finish(); return; }
+
+    // 짧은 섞기 연출 (약 0.9초)
+    rolling = true;
+    render();
+    pickedEl.className = 'name rolling';
+    avatarEl.className = 'avatar rolling';
+    nicknameEl.textContent = '';
+    var ticks = 0;
+    var timer = setInterval(function () {
+      var n = left[randomIndex(left.length)];
+      pickedEl.textContent = n;
+      avatarEl.innerHTML = makeCharacter(n).svg;
+      ticks++;
+      if (ticks >= 12) { clearInterval(timer); finish(); }
+    }, 75);
+  }
+
+  function reset() {
+    if (rolling) return;
+    drawn = [];
+    showPlaceholder();
+    render();
+  }
+
+  namesEl.addEventListener('input', onNamesChange);
+  drawBtn.addEventListener('click', draw);
+  resetBtn.addEventListener('click', reset);
+
+  // 입력창 밖에서 스페이스/엔터로도 뽑기 (교실 리모컨·키보드용)
+  document.addEventListener('keydown', function (e) {
+    if (e.target === namesEl || e.target.tagName === 'BUTTON') return;
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); draw(); }
+  });
+
+  showPlaceholder();
+  onNamesChange();
+})();
+</script>
+</body>
+</html>
