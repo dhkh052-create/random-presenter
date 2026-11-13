@@ -144,7 +144,10 @@
 <div class="wrap">
   <header class="top">
     <h1>우리말 <span>겨루기</span></h1>
-    <button class="btn-ghost btn-sm" id="teacherBtn" type="button">🏆 선생님 · 시상</button>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span class="pill" id="modeBadge" style="font-size:0.85rem">확인 중…</span>
+      <button class="btn-ghost btn-sm" id="teacherBtn" type="button">🏆 선생님 · 시상</button>
+    </div>
   </header>
 
   <!-- 시작 화면 -->
@@ -243,7 +246,8 @@
         <input type="file" id="importFile" accept=".json,application/json" class="hidden">
         <button class="btn-ghost" id="resetBtn" type="button" style="color:var(--bad)">기록 모두 지우기</button>
       </div>
-      <p class="note">기록은 이 기기의 브라우저에 저장돼요. 학생들이 여러 태블릿을 쓴다면, 각 기기에서 <b>백업 파일 저장</b> → 선생님 PC에서 <b>다른 기기 기록 합치기</b>를 하면 한 곳에서 시상할 수 있어요. 같은 파일을 여러 번 합쳐도 중복되지 않아요.</p>
+      <p class="note" id="serverNote" style="display:none">기록은 온라인 데이터베이스에 저장돼요. 어느 기기에서 도전해도 여기에 모두 모여요.</p>
+      <p class="note" id="localNote">기록은 이 기기의 브라우저에 저장돼요. 학생들이 여러 태블릿을 쓴다면, 각 기기에서 <b>백업 파일 저장</b> → 선생님 PC에서 <b>다른 기기 기록 합치기</b>를 하면 한 곳에서 시상할 수 있어요. 같은 파일을 여러 번 합쳐도 중복되지 않아요.</p>
     </div>
   </section>
 </div>
@@ -442,7 +446,54 @@
   const ymOf = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1);
   const skey = (g, c, n) => g + '-' + c + '-' + n;
 
+  // ───────── 온라인 DB (Vercel /api 가 있으면 사용, 없으면 이 기기에 저장) ─────────
+  let SERVER = null;
+  async function api(path, opts = {}, ms = 8000) {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), ms);
+    try { return await fetch(path, { ...opts, signal: ctl.signal, cache: 'no-store' }); }
+    finally { clearTimeout(timer); }
+  }
+  let pending = [];
+  try { pending = JSON.parse(safeGet('urimal.pending') || '[]'); if (!Array.isArray(pending)) pending = []; } catch { pending = []; }
+  const savePending = () => safeSet('urimal.pending', JSON.stringify(pending));
+  let flushing = false;
+  async function flush() {
+    if (flushing || !SERVER) return;
+    flushing = true;
+    try {
+      while (pending.length) {
+        const r = await api('api/record', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pending[0]) });
+        if (!r.ok && r.status !== 400) break; // 400 = 잘못된 기록 → 버림
+        pending.shift(); savePending();
+      }
+    } catch {} finally { flushing = false; }
+  }
+  const serverReady = (async () => {
+    if (location.protocol === 'file:') return;
+    try {
+      const r = await api('api/health', {}, 4000);
+      if (!r.ok) return;
+      const j = await r.json();
+      if (j && j.db) SERVER = { pin: !!j.pin };
+    } catch {}
+  })().then(() => {
+    const on = !!SERVER;
+    document.getElementById('modeBadge').textContent = on ? '☁️ 온라인 저장' : '💾 이 기기에 저장';
+    ['backupBtn', 'importBtn'].forEach((id) => document.getElementById(id).classList.toggle('hidden', on));
+    document.getElementById('localNote').style.display = on ? 'none' : '';
+    document.getElementById('serverNote').style.display = on ? '' : 'none';
+    flush();
+  });
+  setInterval(() => { if (pending.length) flush(); }, 15000);
+
   function record(student, correct) {
+    if (SERVER) {
+      if (G && G.me) { if (correct) G.me.ok++; G.me.t++; G.me.r = G.me.ok / G.me.t; }
+      pending.push({ g: student.g, c: student.c, n: student.n, ok: !!correct, ym: ymOf(new Date()) });
+      savePending(); flush();
+      return;
+    }
     const dev = S.devices[S.deviceId];
     const k = skey(student.g, student.c, student.n);
     const st = dev.students[k] || (dev.students[k] = { g: student.g, c: student.c, n: student.n, m: {} });
@@ -571,6 +622,7 @@
   let G = null;
 
   function monthRate(student) {
+    if (SERVER) return (G && G.me) || { ok: 0, t: 0, r: 0 };
     const st = aggregate()[skey(student.g, student.c, student.n)];
     if (!st) return { c: 0, t: 0, r: 0 };
     return sumMonths(st, [ymOf(new Date())]);
@@ -585,9 +637,21 @@
     startGame(student);
   });
 
-  function startGame(student) {
-    const mr = monthRate(student);
-    G = { student, count: 0, right: 0, streak: 0, wrongRow: 0, retry: [], current: null, startRate: mr.t ? mr.r : null, rateUpShown: false, answered: false };
+  async function startGame(student) {
+    await serverReady;
+    let me = null;
+    if (SERVER) {
+      me = { ok: 0, t: 0, r: 0 };
+      try {
+        const r = await api(`api/me?g=${student.g}&c=${student.c}&n=${encodeURIComponent(student.n)}`);
+        if (r.ok) { const j = await r.json(); me.ok = j.ok | 0; me.t = j.t | 0; }
+      } catch {}
+      const ym = ymOf(new Date());
+      pending.forEach((p) => { if (p.g === student.g && p.c === student.c && p.n === student.n && p.ym === ym) { me.t++; if (p.ok) me.ok++; } });
+      me.r = me.t ? me.ok / me.t : 0;
+    }
+    const mr = me || monthRate(student);
+    G = { me, student, count: 0, right: 0, streak: 0, wrongRow: 0, retry: [], current: null, startRate: mr.t ? mr.r : null, rateUpShown: false, answered: false };
     $('pWho').textContent = `${student.g}학년 ${student.c}반 ${student.n}`;
     show('gameView');
     nextQuestion();
@@ -716,19 +780,39 @@
 
   // ───────── 선생님 · 시상 ─────────
   let unlocked = false;
-  function openTeacher() {
+  let teacherPin = '';
+  async function openTeacher() {
     show('teacherView');
-    const pin = safeGet('urimal.pin');
     $('pinBox').classList.toggle('hidden', unlocked);
     $('teacherBody').classList.toggle('hidden', !unlocked);
-    $('pinMsg').textContent = pin ? '선생님 비밀번호를 입력하세요.' : '처음 사용하시네요. 학생들이 기록을 지우지 못하도록 선생님 비밀번호(숫자 4자리 이상)를 정해 주세요.';
     $('pinInput').value = '';
-    if (!unlocked) $('pinInput').focus(); else renderAwards();
+    if (unlocked) { renderAwards(); return; }
+    $('pinInput').focus();
+    await serverReady;
+    const pin = safeGet('urimal.pin');
+    $('pinMsg').textContent = SERVER
+      ? (SERVER.pin ? '선생님 비밀번호(Vercel에 설정한 TEACHER_PIN)를 입력하세요.' : 'Vercel 환경변수에 TEACHER_PIN(선생님 비밀번호)을 먼저 설정해 주세요.')
+      : pin ? '선생님 비밀번호를 입력하세요.' : '처음 사용하시네요. 학생들이 기록을 지우지 못하도록 선생님 비밀번호(숫자 4자리 이상)를 정해 주세요.';
   }
   $('teacherBtn').addEventListener('click', openTeacher);
   $('closeTeacher').addEventListener('click', () => show('startView'));
-  function tryPin() {
+  async function tryPin() {
     const v = $('pinInput').value.trim();
+    await serverReady;
+    if (SERVER) {
+      if (!SERVER.pin) { toast('Vercel에 TEACHER_PIN을 먼저 설정해 주세요'); return; }
+      try {
+        const r = await api('api/stats', { headers: { 'x-teacher-pin': v } });
+        if (r.status === 401) { toast('비밀번호가 달라요'); $('pinInput').select(); return; }
+        if (!r.ok) throw new Error(r.status);
+      } catch { toast('서버에 연결하지 못했어요'); return; }
+      teacherPin = v;
+      unlocked = true;
+      $('pinBox').classList.add('hidden');
+      $('teacherBody').classList.remove('hidden');
+      renderAwards();
+      return;
+    }
     const pin = safeGet('urimal.pin');
     if (!pin) {
       if (!/^\d{4,8}$/.test(v)) { toast('숫자 4~8자리로 정해 주세요'); return; }
@@ -754,9 +838,15 @@
     if ([...sel.options].some((o) => o.value === cur)) sel.value = cur;
   }
 
-  function currentRows() {
+  async function serverAgg(months) {
+    const r = await api('api/stats?months=' + [...new Set(months)].join(','), { headers: { 'x-teacher-pin': teacherPin } });
+    if (!r.ok) throw new Error(String(r.status));
+    return (await r.json()).students || {};
+  }
+
+  async function currentRows() {
     const p = PER.find((x) => x.id === $('fPeriod').value) || PER[0];
-    const agg = Object.values(aggregate());
+    const agg = Object.values(SERVER ? await serverAgg([...p.months, ...(p.prevMonths || [])]) : aggregate());
     fillFilter($('fGrade'), [...new Set(agg.map((s) => s.g))].sort((a, b) => a - b), '학년', '전체 학년');
     fillFilter($('fCls'), [...new Set(agg.filter((s) => !$('fGrade').value || s.g == $('fGrade').value).map((s) => s.c))].sort((a, b) => a - b), '반', '전체 반');
     const fg = $('fGrade').value, fc = $('fCls').value;
@@ -775,9 +865,15 @@
   const who = (r) => `${r.g}-${r.c} ${r.n}`;
   const pct = (x) => Math.round(x * 100) + '%';
 
-  function renderAwards() {
-    const { p, rows } = currentRows();
-    const aw = $('awards'); aw.textContent = '';
+  let renderSeq = 0;
+  async function renderAwards() {
+    const seq = ++renderSeq;
+    const aw = $('awards');
+    let p, rows;
+    try { ({ p, rows } = await currentRows()); }
+    catch { if (seq === renderSeq) { aw.innerHTML = '<p class="muted">기록을 불러오지 못했어요. 인터넷 연결을 확인하고 다시 열어 주세요.</p>'; $('rankTable').textContent = ''; } return; }
+    if (seq !== renderSeq) return;
+    aw.textContent = '';
     const cards = [];
     if (rows.length) {
       cards.push({ medal: '🥇', t: '정답왕', r: rows[0], d: (r) => `${r.ok}문제 정답` });
@@ -831,8 +927,9 @@
   }
   const today = () => { const d = new Date(); return d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()); };
 
-  $('csvBtn').addEventListener('click', () => {
-    const { p, rows } = currentRows();
+  $('csvBtn').addEventListener('click', async () => {
+    let p, rows;
+    try { ({ p, rows } = await currentRows()); } catch { toast('기록을 불러오지 못했어요'); return; }
     if (!rows.length) { toast('저장할 기록이 없어요'); return; }
     const esc = (v) => '"' + String(v).replace(/"/g, '""') + '"';
     const lines = [['순위', '학년', '반', '이름', '정답', '도전', '승률(%)'].map(esc).join(',')];
@@ -863,7 +960,18 @@
     } catch { toast('우리말 겨루기 백업 파일이 아니에요'); }
   });
 
-  $('resetBtn').addEventListener('click', () => {
+  $('resetBtn').addEventListener('click', async () => {
+    if (SERVER) {
+      if (!confirm('온라인에 저장된 모든 학생 기록을 지울까요?\n지우기 전에 [엑셀(CSV)로 저장]을 먼저 해 두면 안전해요.')) return;
+      if (!confirm('정말 지울까요? 모든 기기의 기록이 사라지고 되돌릴 수 없어요.')) return;
+      try {
+        const r = await api('api/reset', { method: 'POST', headers: { 'x-teacher-pin': teacherPin } });
+        if (!r.ok) throw new Error(String(r.status));
+        toast('기록을 모두 지웠어요');
+      } catch { toast('지우지 못했어요. 다시 시도해 주세요'); }
+      renderAwards();
+      return;
+    }
     if (!confirm('이 기기에 저장된 모든 학생 기록을 지울까요?\n지우기 전에 [백업 파일 저장]을 먼저 해 두면 안전해요.')) return;
     if (!confirm('정말 지울까요? 되돌릴 수 없어요.')) return;
     S.devices = { [S.deviceId]: { updatedAt: Date.now(), students: {} } };

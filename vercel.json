@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/quiz", "destination": "/우리말겨루기.html" }
+  ]
+}
