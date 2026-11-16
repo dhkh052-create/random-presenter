@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>자모 냠냠! 세종의 한글 만렙 챌린지</title>
+<meta name="author" content="곱단이 선생님">
+<meta name="description" content="세종대왕과 함께 자음·모음을 받아먹어 단어를 완성하는 한글 게임 · 제작 곱단이 선생님">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
@@ -75,6 +77,12 @@
   @keyframes bounce { 50% { transform:translateY(-8px); } }
   .finalwrap { position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; width:100%; max-width:640px; }
   .tip { font-size:12px; color:#8a7a6a; margin-top:10px; }
+  .credit { text-align:center; font-size:13px; color:#a07c5a; margin-top:14px; }
+  .credit b { font-family:'Jua',sans-serif; font-weight:400; font-size:15px; color:#d8343c; }
+  .panel.title { position:relative; }
+  .titlecredit { position:absolute; right:16px; bottom:10px; font-family:'Jua',sans-serif; font-size:12px; color:#b8987a; }
+  @media (max-width:560px) { .titlecredit { position:static; margin-top:6px; } }
+  .certcredit { font-family:'Jua',sans-serif; font-size:14px; color:#8a7a6a; margin-top:12px; border-top:1px dashed #e0c9a0; padding-top:8px; }
   /* ranking */
   .panel.title { padding:14px 20px 12px; }
   .panel.title .how { margin:6px 0; }
@@ -124,6 +132,7 @@
     <div class="ctrl"><button id="bUp">▲</button><button id="bDown">▼</button></div>
     <div class="screen" id="screen"></div>
   </div>
+  <footer class="credit">자모 냠냠! 세종의 한글 만렙 챌린지 · 제작 <b>곱단이 선생님</b> · © 2026</footer>
 </div>
 
 <div id="final" class="hidden">
@@ -140,6 +149,7 @@
         <div class="score">최종 점수 <span id="certScore" style="color:#c8262e">0</span>점<br><span style="font-size:15px;color:#8a7a6a" id="certDate"></span></div>
         <div style="text-align:right"><div style="font-family:'Jua';font-size:16px;margin-bottom:4px">조선 제4대 임금 세종</div><div class="seal" style="margin-left:auto">세종<br>대왕</div></div>
       </div>
+      <div class="certcredit">제작 · 곱단이 선생님</div>
     </div>
     <div class="rankcard" id="finalRank">순위를 확인하는 중…</div>
     <div><button class="btn" id="bAgain">처음부터 다시</button><button class="btn alt" id="bFinalRank">🏆 순위표</button></div>
@@ -282,6 +292,7 @@ function titleScreen() {
     <div class="speeds" id="speeds">${Object.entries(SPEEDS).map(([k, s]) => `<button data-k="${k}" class="${k === speedKey ? 'on' : ''}">${s.label}<small>${s.desc}</small></button>`).join('')}</div>
     <button class="btn" id="bStart">출발! 🏃</button>
     <button class="btn alt" id="bTitleRank">🏆 순위표</button>
+    <div class="titlecredit">제작 · 곱단이 선생님</div>
   </div>`);
   $('speeds').onclick = e => {
     const b = e.target.closest('button'); if (!b) return;
