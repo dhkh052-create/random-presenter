@@ -200,6 +200,29 @@
   .chips li .num { color: var(--muted); font-size: 0.9rem; }
   .empty { color: var(--muted); margin: 0; }
 
+  /* 번호/이름 탭 */
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--chip); padding: 5px; border-radius: 14px; margin-bottom: 16px; }
+  .tab { min-height: 48px; padding: 0 10px; font-size: 1.05rem; border: none; background: transparent; color: var(--muted); border-radius: 10px; }
+  .tab[aria-selected="true"] { background: var(--card); color: var(--accent); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .stepper { display: flex; align-items: stretch; gap: 8px; }
+  .stepper button { min-height: 60px; width: 64px; padding: 0; font-size: 1.8rem; border: 2px solid var(--line); background: var(--bg); color: var(--text); }
+  .stepper input { flex: 1; min-width: 0; text-align: center; font: inherit; font-size: 2rem; font-weight: 800; color: var(--text); background: var(--bg); border: 2px solid var(--line); border-radius: 14px; }
+  .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .stepper input { -moz-appearance: textfield; }
+  input.text { width: 100%; font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+  .stepper input:focus, input.text:focus { outline: 3px solid var(--accent-soft); border-color: var(--accent); }
+  .opt { font-weight: 400; color: var(--muted); font-size: .9rem; }
+  /* 한 번에 뽑을 인원 */
+  .howmany { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0 0 14px; flex-wrap: wrap; }
+  .howmany span { color: var(--muted); font-weight: 700; margin-right: 4px; }
+  .howmany button { min-height: 44px; padding: 0 18px; font-size: 1.05rem; border: 2px solid var(--line); background: transparent; color: var(--text); }
+  .howmany button.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  /* 여러 명 결과 */
+  .multi { display: flex; justify-content: center; gap: clamp(10px, 3vw, 28px); flex-wrap: wrap; margin: 16px 0 6px; }
+  .multi .one { flex: 0 1 220px; min-width: 130px; }
+  .multi .avatar { width: clamp(110px, min(20vw, 24vh), 190px); margin-top: 0; }
+  .multi .name { font-size: clamp(2rem, min(7vw, 9vh), 4.6rem); }
+  .multi .nickname { font-size: clamp(.95rem, 2vw, 1.15rem); min-height: 1.3em; }
   @media (prefers-reduced-motion: reduce) {
     .name.pop, .avatar.pop { animation: none; }
   }
@@ -211,19 +234,48 @@
 
   <div class="layout">
     <section class="card">
-      <label class="title" for="names">학생 이름</label>
-      <textarea id="names" placeholder="예) 김민준, 이서연, 박지호&#10;또는 한 줄에 한 명씩 입력" autocomplete="off" spellcheck="false"></textarea>
-      <p class="hint" id="nameInfo">쉼표(,)나 줄바꿈으로 구분해 주세요.</p>
-      <p class="hint">입력한 이름은 이 화면에만 있고 저장되거나 전송되지 않습니다. 창을 닫으면 사라집니다.</p>
+      <div class="tabs" role="tablist" aria-label="뽑기 방식">
+        <button type="button" class="tab" id="tabNum" role="tab">🔢 번호로</button>
+        <button type="button" class="tab" id="tabName" role="tab">📝 이름으로</button>
+      </div>
+
+      <div id="numPanel" role="tabpanel">
+        <label class="title" for="lastNum">마지막 번호</label>
+        <div class="stepper">
+          <button type="button" id="numMinus" aria-label="마지막 번호 1 줄이기">−</button>
+          <input id="lastNum" type="number" inputmode="numeric" min="1" max="99" value="25">
+          <button type="button" id="numPlus" aria-label="마지막 번호 1 늘리기">+</button>
+        </div>
+        <p class="hint" id="numInfo"></p>
+        <label class="title" for="skipNums" style="margin-top:16px">빼고 뽑을 번호 <span class="opt">(선택)</span></label>
+        <input id="skipNums" class="text" placeholder="예) 3, 15" autocomplete="off" inputmode="numeric">
+        <p class="hint" id="skipInfo">결석·전학 등으로 빠지는 번호를 쉼표로 적어 주세요.</p>
+      </div>
+
+      <div id="namePanel" role="tabpanel" hidden>
+        <label class="title" for="names">학생 이름</label>
+        <textarea id="names" placeholder="예) 김민준, 이서연, 박지호&#10;또는 한 줄에 한 명씩 입력" autocomplete="off" spellcheck="false"></textarea>
+        <p class="hint" id="nameInfo">쉼표(,)나 줄바꿈으로 구분해 주세요.</p>
+        <p class="hint">입력한 이름은 이 화면에만 있고 저장되거나 전송되지 않습니다. 창을 닫으면 사라집니다.</p>
+      </div>
     </section>
 
     <div>
       <section class="card stage" aria-live="polite">
         <div class="count" id="count">이름을 입력해 주세요</div>
-        <div class="avatar" id="avatar"></div>
-        <div class="name placeholder" id="picked">누가 뽑힐까요?</div>
-        <p class="nickname" id="nickname"></p>
+        <div id="single">
+          <div class="avatar" id="avatar"></div>
+          <div class="name placeholder" id="picked">누가 뽑힐까요?</div>
+          <p class="nickname" id="nickname"></p>
+        </div>
+        <div class="multi" id="multi" hidden></div>
         <p class="message" id="message"></p>
+        <div class="howmany" role="group" aria-label="한 번에 뽑을 인원">
+          <span>한 번에</span>
+          <button type="button" data-n="1">1명</button>
+          <button type="button" data-n="2">2명</button>
+          <button type="button" data-n="3">3명</button>
+        </div>
         <div class="buttons">
           <button type="button" class="btn-draw" id="drawBtn">뽑기</button>
           <button type="button" class="btn-reset" id="resetBtn">초기화</button>
@@ -457,9 +509,94 @@
   var historyEl = document.getElementById('history');
   var historyEmptyEl = document.getElementById('historyEmpty');
 
-  var allNames = [];   // 중복·빈 칸이 제거된 전체 명단
+  var singleEl = document.getElementById('single');
+  var multiEl = document.getElementById('multi');
+  var tabNum = document.getElementById('tabNum');
+  var tabName = document.getElementById('tabName');
+  var numPanel = document.getElementById('numPanel');
+  var namePanel = document.getElementById('namePanel');
+  var lastNumEl = document.getElementById('lastNum');
+  var numInfoEl = document.getElementById('numInfo');
+  var skipEl = document.getElementById('skipNums');
+  var skipInfoEl = document.getElementById('skipInfo');
+  var howBtns = Array.prototype.slice.call(document.querySelectorAll('.howmany button'));
+
+  var allNames = [];   // 지금 뽑을 수 있는 전체 명단 (번호 모드면 '1번', '2번' …)
   var drawn = [];      // 뽑힌 순서
   var rolling = false;
+
+  // 번호 모드·마지막 번호·한 번에 뽑을 인원은 다음에 열어도 그대로 (이름은 저장하지 않음)
+  function load(k, d) { try { var v = localStorage.getItem('picker_' + k); return v === null ? d : v; } catch (e) { return d; } }
+  function save(k, v) { try { localStorage.setItem('picker_' + k, String(v)); } catch (e) {} }
+  var mode = load('mode', 'num') === 'name' ? 'name' : 'num';
+  var lastNum = clampNum(parseInt(load('last', '25'), 10));
+  var howMany = Math.min(3, Math.max(1, parseInt(load('howmany', '1'), 10) || 1));
+
+  function clampNum(n) { return Math.min(99, Math.max(1, isNaN(n) ? 25 : n)); }
+
+  function parseSkip() {
+    var set = Object.create(null), out = [];
+    (skipEl.value.match(/\d+/g) || []).forEach(function (s) {
+      var n = parseInt(s, 10);
+      if (n >= 1 && n <= lastNum && !set[n]) { set[n] = true; out.push(n); }
+    });
+    out.sort(function (a, b) { return a - b; });
+    return out;
+  }
+
+  function buildPool() {
+    if (mode === 'name') {
+      var parsed = parseNames(namesEl.value);
+      var info = '쉼표(,)나 줄바꿈으로 구분해 주세요.';
+      if (parsed.list.length) {
+        info = '인식된 이름 ' + parsed.list.length + '명';
+        if (parsed.dupes) info += ' (중복 ' + parsed.dupes + '개는 한 번만 넣었어요)';
+      }
+      nameInfoEl.textContent = info;
+      return parsed.list;
+    }
+    var skip = parseSkip();
+    var list = [];
+    for (var i = 1; i <= lastNum; i++) if (skip.indexOf(i) === -1) list.push(i + '번');
+    numInfoEl.textContent = '1번부터 ' + lastNum + '번까지' + (skip.length ? ', ' + skip.length + '명 빼고 ' : ' ') + list.length + '명';
+    skipInfoEl.textContent = skip.length
+      ? '빼는 번호: ' + skip.map(function (n) { return n + '번'; }).join(', ')
+      : '결석·전학 등으로 빠지는 번호를 쉼표로 적어 주세요.';
+    return list;
+  }
+
+  function onPoolChange() {
+    allNames = buildPool();
+    // 명단에서 빠진 사람은 뽑힌 기록에서도 뺍니다.
+    drawn = drawn.filter(function (n) { return allNames.indexOf(n) !== -1; });
+    render();
+  }
+
+  function setMode(m) {
+    if (rolling) return;
+    mode = m; save('mode', m);
+    tabNum.setAttribute('aria-selected', m === 'num');
+    tabName.setAttribute('aria-selected', m === 'name');
+    numPanel.hidden = m !== 'num';
+    namePanel.hidden = m !== 'name';
+    drawn = [];
+    showPlaceholder();
+    onPoolChange();
+  }
+
+  function setLast(n) {
+    lastNum = clampNum(n);
+    if (String(lastNum) !== lastNumEl.value) lastNumEl.value = lastNum;
+    save('last', lastNum);
+    onPoolChange();
+  }
+
+  function setHowMany(n) {
+    if (rolling) return;
+    howMany = n; save('howmany', n);
+    howBtns.forEach(function (b) { b.classList.toggle('on', +b.dataset.n === n); });
+    render();
+  }
 
   function parseNames(text) {
     var seen = Object.create(null);
@@ -493,8 +630,11 @@
     var left = remaining();
     var total = allNames.length;
 
+    var k = Math.min(howMany, Math.max(1, left.length));
+    drawBtn.textContent = k > 1 ? k + '명 뽑기' : '뽑기';
+
     if (total === 0) {
-      countEl.textContent = '이름을 입력해 주세요';
+      countEl.textContent = mode === 'num' ? '뽑을 번호가 없어요' : '이름을 입력해 주세요';
       countEl.classList.remove('all-done');
     } else if (left.length === 0) {
       countEl.textContent = '남은 인원 0명 / 전체 ' + total + '명';
@@ -531,6 +671,9 @@
   }
 
   function showPlaceholder() {
+    singleEl.hidden = false;
+    multiEl.hidden = true;
+    multiEl.innerHTML = '';
     avatarEl.className = 'avatar';
     avatarEl.innerHTML = MYSTERY_SVG;
     pickedEl.className = 'name placeholder';
@@ -538,56 +681,61 @@
     nicknameEl.textContent = '';
   }
 
-  function onNamesChange() {
-    var parsed = parseNames(namesEl.value);
-    allNames = parsed.list;
-    // 명단에서 지워진 이름은 뽑힌 기록에서도 뺍니다.
-    drawn = drawn.filter(function (n) { return allNames.indexOf(n) !== -1; });
-
-    var info = '쉼표(,)나 줄바꿈으로 구분해 주세요.';
-    if (allNames.length) {
-      info = '인식된 이름 ' + allNames.length + '명';
-      if (parsed.dupes) info += ' (중복 ' + parsed.dupes + '개는 한 번만 넣었어요)';
-    }
-    nameInfoEl.textContent = info;
-    render();
-  }
-
   function draw() {
     var left = remaining();
     if (rolling || left.length === 0) return;
 
-    var winner = left[randomIndex(left.length)];
+    // 겹치지 않게 k명 뽑기
+    var k = Math.min(howMany, left.length);
+    var pool = left.slice(), winners = [];
+    for (var i = 0; i < k; i++) winners.push(pool.splice(randomIndex(pool.length), 1)[0]);
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // 결과를 보여 줄 칸 준비: 1명이면 큰 칸, 여러 명이면 나란히
+    var slots;
+    if (k === 1) {
+      singleEl.hidden = false; multiEl.hidden = true; multiEl.innerHTML = '';
+      slots = [{ av: avatarEl, nm: pickedEl, nk: nicknameEl }];
+    } else {
+      singleEl.hidden = true; multiEl.hidden = false; multiEl.innerHTML = '';
+      slots = winners.map(function () {
+        var one = document.createElement('div'); one.className = 'one';
+        var av = document.createElement('div'); av.className = 'avatar';
+        var nm = document.createElement('div'); nm.className = 'name';
+        var nk = document.createElement('p'); nk.className = 'nickname';
+        one.appendChild(av); one.appendChild(nm); one.appendChild(nk);
+        multiEl.appendChild(one);
+        return { av: av, nm: nm, nk: nk };
+      });
+    }
 
     function finish() {
       rolling = false;
-      drawn.push(winner);
-      var ch = makeCharacter(winner);
-      avatarEl.className = 'avatar';
-      avatarEl.innerHTML = ch.svg;
-      pickedEl.className = 'name';
-      pickedEl.textContent = winner;
-      nicknameEl.textContent = ch.nick;
-      void pickedEl.offsetWidth; // 애니메이션 재시작
-      avatarEl.classList.add('pop');
-      pickedEl.classList.add('pop');
+      winners.forEach(function (w, i) {
+        drawn.push(w);
+        var s = slots[i], ch = makeCharacter(w);
+        s.av.className = 'avatar'; s.av.innerHTML = ch.svg;
+        s.nm.className = 'name'; s.nm.textContent = w;
+        s.nk.textContent = ch.nick;
+        void s.nm.offsetWidth; // 애니메이션 재시작
+        s.av.classList.add('pop'); s.nm.classList.add('pop');
+      });
       render();
     }
 
-    if (reduce || left.length === 1) { finish(); return; }
+    if (reduce || left.length === k) { finish(); return; }
 
     // 짧은 섞기 연출 (약 0.9초)
     rolling = true;
     render();
-    pickedEl.className = 'name rolling';
-    avatarEl.className = 'avatar rolling';
-    nicknameEl.textContent = '';
+    slots.forEach(function (s) { s.nm.className = 'name rolling'; s.av.className = 'avatar rolling'; s.nk.textContent = ''; });
     var ticks = 0;
     var timer = setInterval(function () {
-      var n = left[randomIndex(left.length)];
-      pickedEl.textContent = n;
-      avatarEl.innerHTML = makeCharacter(n).svg;
+      slots.forEach(function (s) {
+        var n = left[randomIndex(left.length)];
+        s.nm.textContent = n;
+        s.av.innerHTML = makeCharacter(n).svg;
+      });
       ticks++;
       if (ticks >= 12) { clearInterval(timer); finish(); }
     }, 75);
@@ -600,18 +748,29 @@
     render();
   }
 
-  namesEl.addEventListener('input', onNamesChange);
+  namesEl.addEventListener('input', onPoolChange);
+  skipEl.addEventListener('input', onPoolChange);
+  // 직접 입력은 다 쓰고 나서(엔터·다른 곳 누르기) 반영: '25'를 치는 도중 '2'로 줄어 기록이 지워지지 않게
+  lastNumEl.addEventListener('change', function () { setLast(parseInt(lastNumEl.value, 10)); });
+  lastNumEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') lastNumEl.blur(); });
+  document.getElementById('numMinus').addEventListener('click', function () { setLast(lastNum - 1); });
+  document.getElementById('numPlus').addEventListener('click', function () { setLast(lastNum + 1); });
+  tabNum.addEventListener('click', function () { setMode('num'); });
+  tabName.addEventListener('click', function () { setMode('name'); });
+  howBtns.forEach(function (b) { b.addEventListener('click', function () { setHowMany(+b.dataset.n); }); });
   drawBtn.addEventListener('click', draw);
   resetBtn.addEventListener('click', reset);
 
   // 입력창 밖에서 스페이스/엔터로도 뽑기 (교실 리모컨·키보드용)
   document.addEventListener('keydown', function (e) {
-    if (e.target === namesEl || e.target.tagName === 'BUTTON') return;
+    var tag = e.target.tagName;
+    if (tag === 'TEXTAREA' || tag === 'INPUT' || tag === 'BUTTON') return;
     if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); draw(); }
   });
 
-  showPlaceholder();
-  onNamesChange();
+  lastNumEl.value = lastNum;
+  setHowMany(howMany);
+  setMode(mode);
 })();
 </script>
 </body>
