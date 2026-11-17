@@ -41,7 +41,8 @@
   .k-AS { fill:#f6d59e; } .k-EU { fill:#bcd5f3; } .k-AF { fill:#f2bd97; }
   .k-NA { fill:#c4e3b7; } .k-SA { fill:#e3c6e6; } .k-OC { fill:#b2e2dd; }
   .k-plain { fill:#cfd8e2; }
-  #map .win { fill:#ffc83a; }
+  #map .win { fill:#1f9d6b; }
+  #map path.win { stroke:#e9fff4; }
   #map .fail { fill:#f39a92; }
   #map path.sel { stroke:#d8343c; stroke-width:2.4; }
   #map path.wrong { fill:#ff6b6b !important; }
@@ -93,7 +94,7 @@
   .prog h3 { margin:0 0 6px; font-family:'Jua',sans-serif; font-weight:400; font-size:16px; color:var(--sub); }
   .bar { display:grid; grid-template-columns:76px 1fr 54px; align-items:center; gap:8px; font-size:13px; margin:4px 0; }
   .bar .tr { height:10px; background:#eef2f7; border-radius:99px; overflow:hidden; }
-  .bar .fi { height:100%; background:linear-gradient(90deg,#ffc83a,#ff9f1c); border-radius:99px; transition:width .5s; }
+  .bar .fi { height:100%; background:linear-gradient(90deg,#3cc98a,#1f9d6b); border-radius:99px; transition:width .5s; }
   .bar span:last-child { text-align:right; color:var(--sub); }
   .shake { animation:shake .35s; }
   @keyframes shake { 20%,60% { transform:translateX(-6px); } 40%,80% { transform:translateX(6px); } }
@@ -455,7 +456,7 @@ function status(k) {
 function paint() {
   gC.selectAll('path').attr('class', d => !d.key ? 'nodata' : 'c ' + status(d.key) + (sel === d.key ? ' sel' : ''));
   gM.selectAll('circle').attr('class', d => 'mk ' + status(d.key) + (sel === d.key ? ' sel' : ''))
-    .style('fill', d => { const st = status(d.key); return st === 'win' ? '#ffb300' : st === 'fail' ? '#ef6b61' : '#ff7a59'; });
+    .style('fill', d => { const st = status(d.key); return st === 'win' ? '#1f9d6b' : st === 'fail' ? '#ef6b61' : '#ff7a59'; });
   gC.selectAll('path.sel').raise();
 }
 
@@ -505,8 +506,8 @@ function hud() {
   }
   $('streak').textContent = S.streak;
   $('legend').innerHTML = mode === 'cap'
-    ? Object.entries(CONT).map(([c,n]) => `<span><i style="background:${CONT_COLOR[c]}"></i>${n}</span>`).join('') + '<span><i style="background:#ffc83a"></i>정복 완료</span><span><i style="background:#f39a92"></i>아쉽게 놓침</span><span><i style="background:#ff7a59;border-radius:50%"></i>작은 나라(점을 눌러요)</span>'
-    : '<span><i style="background:#cfd8e2"></i>아직 못 찾음</span><span><i style="background:#ffc83a"></i>찾은 나라</span><span><i style="background:#ff7a59;border-radius:50%"></i>작은 나라(점을 눌러요)</span>';
+    ? Object.entries(CONT).map(([c,n]) => `<span><i style="background:${CONT_COLOR[c]}"></i>${n}</span>`).join('') + '<span><i style="background:#1f9d6b"></i>정복 완료</span><span><i style="background:#f39a92"></i>아쉽게 놓침</span><span><i style="background:#ff7a59;border-radius:50%"></i>작은 나라(점을 눌러요)</span>'
+    : '<span><i style="background:#cfd8e2"></i>아직 못 찾음</span><span><i style="background:#1f9d6b"></i>찾은 나라</span><span><i style="background:#ff7a59;border-radius:50%"></i>작은 나라(점을 눌러요)</span>';
 }
 
 function progressHTML() {
