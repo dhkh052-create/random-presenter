@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>소리가 나는 길</title>
+<meta name="author" content="곱단이 선생님">
+<meta name="description" content="한글 자음과 모음이 입안 어디에서 어떻게 소리 나는지 움직이는 그림으로 보여 주는 학습 자료 · 제작 곱단이 선생님">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#2b2433; --sub:#6b6275; --card:#fff; --red:#d8343c; --blue:#2f7de1; --air:#3aa7ff;
+    --lab:#e84d8a; --alv:#f08c00; --pal:#2fa36b; --vel:#3b7ddd; --glot:#8a56d6; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; background:linear-gradient(180deg,#fff4ec,#f3f0ff); color:var(--ink); font-family:'Noto Sans KR','Malgun Gothic',sans-serif; }
+  .wrap { max-width:1300px; margin:0 auto; padding:12px 16px 24px; }
+  .jua { font-family:'Jua',sans-serif; font-weight:400; }
+  header { display:flex; flex-wrap:wrap; align-items:flex-end; gap:6px 14px; margin-bottom:10px; }
+  h1 { margin:0; font-family:'Jua',sans-serif; font-weight:400; font-size:32px; color:#7a2e4a; }
+  .lead { font-size:14.5px; color:var(--sub); margin:0; line-height:1.55; }
+  .lead b { color:var(--ink); }
+  .main { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); gap:14px; align-items:start; }
+  .card { background:var(--card); border-radius:20px; padding:14px; box-shadow:0 4px 0 rgba(0,0,0,.06); }
+  .stage { position:sticky; top:10px; }
+  #mouth { width:100%; height:auto; display:block; background:#fffaf6; border-radius:14px; }
+  .views { position:relative; }
+  .front { position:absolute; right:8px; top:8px; width:29%; background:#fff; border-radius:14px; box-shadow:0 2px 10px rgba(80,30,45,.15); padding:6px 6px 2px; }
+  .fhead { font-family:'Jua',sans-serif; font-size:13px; color:#7a2e4a; text-align:center; }
+  .places { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .places button { border:0; border-radius:999px; padding:5px 10px 5px 6px; background:#f4f1f7; font-size:13px; cursor:pointer; display:flex; align-items:center; gap:5px; font-family:inherit; color:var(--ink); }
+  .places button i { width:20px; height:20px; border-radius:50%; color:#fff; font-style:normal; font-size:12px; display:grid; place-items:center; font-weight:700; }
+  .places button.on { box-shadow:0 0 0 2px currentColor inset; }
+  .ctrl { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:10px; }
+  .btn { border:0; border-radius:12px; padding:8px 13px; font-family:'Jua',sans-serif; font-size:16px; cursor:pointer; background:#f0ecf5; color:var(--ink); box-shadow:0 3px 0 rgba(0,0,0,.12); }
+  .btn:active { transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.12); }
+  .btn.primary { background:#7a2e4a; color:#fff; box-shadow:0 3px 0 #4f1a2f; }
+  .btn.on { background:#ffe28a; }
+  .now { margin-top:10px; background:#fbf7ff; border-radius:14px; padding:10px 12px; min-height:92px; }
+  .now .title { font-family:'Jua',sans-serif; font-size:21px; display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; }
+  .now .title big { font-size:40px; line-height:1; color:#7a2e4a; }
+  .tags { display:flex; flex-wrap:wrap; gap:5px; }
+  .tag { font-family:'Noto Sans KR',sans-serif; font-size:12px; font-weight:700; padding:3px 9px; border-radius:999px; color:#fff; }
+  .steps { list-style:none; padding:0; margin:8px 0 0; display:flex; flex-direction:column; gap:4px; }
+  .steps li { font-size:14.5px; line-height:1.5; padding:5px 9px; border-radius:9px; color:#9a92a5; transition:all .2s; }
+  .steps li.cur { background:#fff; color:var(--ink); box-shadow:0 0 0 2px #e8b5c8 inset; font-weight:700; }
+  .steps li.done { color:var(--ink); }
+  .tabs { display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
+  .tabs button { border:0; border-radius:999px; padding:8px 16px; font-family:'Jua',sans-serif; font-size:18px; cursor:pointer; background:#fff; color:var(--sub); box-shadow:0 2px 0 rgba(0,0,0,.08); }
+  .tabs button.on { background:#7a2e4a; color:#fff; }
+  h2 { font-family:'Jua',sans-serif; font-weight:400; font-size:21px; margin:4px 0 8px; color:#7a2e4a; }
+  h3 { font-family:'Jua',sans-serif; font-weight:400; font-size:18px; margin:16px 0 6px; }
+  p.desc { font-size:14px; line-height:1.6; color:var(--sub); margin:0 0 8px; }
+  table.ct { width:100%; border-collapse:separate; border-spacing:3px; table-layout:fixed; }
+  .ct th { font-size:12.5px; font-weight:700; padding:6px 2px; border-radius:8px; background:#f4f1f7; cursor:pointer; line-height:1.3; }
+  .ct th small { display:block; font-weight:400; color:var(--sub); font-size:11px; }
+  .ct th.corner { background:transparent; cursor:default; }
+  .ct td { text-align:center; padding:0; }
+  .ct td button { width:100%; min-height:46px; border:0; border-radius:10px; background:#fff; box-shadow:0 0 0 1.5px #e7e0ee inset; font-family:'Jua',sans-serif; font-size:28px; cursor:pointer; color:var(--ink); }
+  .ct td button:hover { background:#fff5f8; }
+  .ct td button.on { background:#7a2e4a; color:#fff; box-shadow:none; }
+  .ct td.empty { background:#faf8fc; border-radius:10px; }
+  .ph { font-size:11px !important; }
+  .info { background:#fbf7ff; border-radius:12px; padding:10px 12px; font-size:14px; line-height:1.65; margin-top:10px; }
+  .info b { color:#7a2e4a; }
+  .grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .mini { background:#fff; border-radius:12px; padding:9px 10px; box-shadow:0 0 0 1.5px #eee6f3 inset; font-size:13.5px; line-height:1.55; }
+  .mini b { display:block; font-family:'Jua',sans-serif; font-weight:400; font-size:17px; margin-bottom:2px; }
+  .pairs { display:flex; flex-wrap:wrap; gap:6px; }
+  .pairs .btn { font-size:15px; }
+  .tip { margin-top:10px; background:#fff8dc; border-radius:12px; padding:9px 12px; font-size:13.5px; line-height:1.6; }
+  .vwrap { max-width:420px; }
+  #trap { width:100%; height:auto; display:block; }
+  #lipsFront { width:100%; height:auto; display:block; }
+  .vt td button { font-size:30px; min-height:52px; }
+  footer.credit { text-align:center; font-size:13px; color:#9a92a5; margin-top:16px; }
+  footer.credit b { color:#6b6275; }
+  .warn { font-size:12.5px; color:#a0662a; margin-top:6px; display:none; }
+  @media (max-width:900px) {
+    .main { grid-template-columns:1fr; }
+    .stage { position:static; }
+  }
+  @media (max-width:600px) {
+    .front { position:static; width:62%; margin:8px auto 0; box-shadow:0 0 0 1.5px #eee6f3 inset; }
+    h1 { font-size:26px; }
+    .grid3 { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>👄 소리가 나는 길</h1>
+    <p class="lead">말소리는 <b>허파의 공기</b>가 <b>목청</b>을 지나 <b>입</b>이나 <b>코</b>로 나가면서 만들어져요. 공기 길을 <b>어디에서(조음 위치)</b>, <b>어떻게(조음 방법)</b> 막거나 좁히느냐에 따라 서로 다른 소리가 나요.</p>
+  </header>
+
+  <div class="main">
+    <section class="card stage">
+      <div class="views">
+        <svg id="mouth" viewBox="0 0 420 440" aria-label="입안 옆모습 그림"></svg>
+        <div class="front"><div class="fhead">👄 앞에서 본 입</div><svg id="lipsFront" viewBox="0 0 160 118" aria-label="앞에서 본 입술 모양"></svg></div>
+      </div>
+      <div class="places" id="places"></div>
+      <div class="ctrl">
+        <button class="btn primary" id="replay" onclick="replay()">▶ 다시 보기</button>
+        <button class="btn" id="slowBtn" onclick="toggleSlow()">🐢 천천히</button>
+        <button class="btn on" id="sndBtn" onclick="toggleSound()">🔊 소리 켜짐</button>
+        <button class="btn" onclick="toRest()">↺ 처음 자세</button>
+      </div>
+      <div class="warn" id="warn">이 기기에는 한국어 음성이 없어 소리가 나오지 않을 수 있어요. 그림 움직임은 그대로 볼 수 있어요.</div>
+      <div class="now" id="now"><div class="title">오른쪽에서 자음이나 모음을 눌러 보세요 👉</div>
+        <ul class="steps"><li class="done">파란 점은 공기의 흐름이에요. 빨간 동그라미는 소리가 만들어지는 곳이에요.</li></ul></div>
+    </section>
+
+    <section>
+      <div class="tabs">
+        <button id="tabC" class="on" onclick="setTab('C')">자음 (닿소리)</button>
+        <button id="tabV" onclick="setTab('V')">단모음 (홀소리)</button>
+        <button id="tabD" onclick="setTab('D')">이중 모음</button>
+      </div>
+      <div id="paneC" class="card"></div>
+      <div id="paneV" class="card" hidden></div>
+      <div id="paneD" class="card" hidden></div>
+    </section>
+  </div>
+  <footer class="credit">소리가 나는 길 · 제작 <b>곱단이 선생님</b> · © 2026 · 소리는 기기의 음성 합성으로 들려줘요</footer>
+</div>
+
+<script>
+// ======================= 자료 =======================
+const PLACE = {
+  lab:  { n:1, name:'입술소리', han:'양순음', who:'두 입술', color:'var(--lab)', hex:'#e84d8a', pt:[50,211], desc:'윗입술과 아랫입술이 맞닿거나 가까워지며 나는 소리예요.' },
+  alv:  { n:2, name:'잇몸소리', han:'치조음', who:'혀끝 + 윗잇몸', color:'var(--alv)', hex:'#f08c00', pt:[97,191], desc:'혀끝이 윗니 뒤의 볼록한 잇몸(치조)에 닿거나 가까워지며 나는 소리예요.' },
+  pal:  { n:3, name:'센입천장소리', han:'경구개음', who:'혓바닥 앞부분 + 센입천장', color:'var(--pal)', hex:'#2fa36b', pt:[136,176], desc:'혓바닥 앞부분이 딱딱한 입천장(센입천장)에 닿으며 나는 소리예요.' },
+  vel:  { n:4, name:'여린입천장소리', han:'연구개음', who:'혀 뒷부분 + 여린입천장', color:'var(--vel)', hex:'#3b7ddd', pt:[205,174], desc:'혀의 뒷부분이 말랑한 입천장(여린입천장)에 닿으며 나는 소리예요.' },
+  glot: { n:5, name:'목청소리', han:'후음', who:'목청(성문)', color:'var(--glot)', hex:'#8a56d6', pt:[252,352], desc:'목 안의 두 목청(성대) 사이 틈에서 나는 소리예요.' },
+};
+const MANNER = {
+  stop:  { name:'파열음', color:'#d8343c', desc:'공기 길을 <b>꽉 막았다가</b> 한꺼번에 <b>터뜨리며</b> 내는 소리 (ㅂ·ㄷ·ㄱ 무리)' },
+  affr:  { name:'파찰음', color:'#c45a12', desc:'<b>막았다가</b> 천천히 열면서 좁은 틈으로 <b>마찰</b>시키는 소리 — 파열 + 마찰 (ㅈ·ㅉ·ㅊ)' },
+  fric:  { name:'마찰음', color:'#b07d00', desc:'완전히 막지 않고 <b>좁은 틈</b>으로 공기를 <b>비비듯</b> 내보내는 소리 (ㅅ·ㅆ·ㅎ)' },
+  nasal: { name:'비음', color:'#2f8f8a', desc:'입 길을 막고 <b>여린입천장을 내려</b> 공기를 <b>코로</b> 내보내는 소리 (ㅁ·ㄴ·ㅇ)' },
+  liq:   { name:'유음', color:'#5a6fd6', desc:'혀끝을 잇몸에 가볍게 대고 공기를 <b>혀 양옆으로 흘려</b> 보내거나 혀끝을 <b>한 번 튕기는</b> 소리 (ㄹ)' },
+};
+const PHON = {
+  lax:  { name:'예사소리', color:'#6b8e23', desc:'목청을 편하게 두고 <b>부드럽게</b> 내는 소리' },
+  tense:{ name:'된소리', color:'#c2185b', desc:'<b>목청을 꽉 조여 긴장</b>시켜 단단하게 내는 소리. 바람은 거의 안 나와요.' },
+  asp:  { name:'거센소리', color:'#1565c0', desc:'목청을 활짝 열고 <b>숨을 거세게 \'후~\'</b> 내뿜는 소리' },
+};
+const CONS = {
+  'ㅂ':{p:'lab',m:'stop',h:'lax',s:'바'}, 'ㅃ':{p:'lab',m:'stop',h:'tense',s:'빠'}, 'ㅍ':{p:'lab',m:'stop',h:'asp',s:'파'},
+  'ㄷ':{p:'alv',m:'stop',h:'lax',s:'다'}, 'ㄸ':{p:'alv',m:'stop',h:'tense',s:'따'}, 'ㅌ':{p:'alv',m:'stop',h:'asp',s:'타'},
+  'ㄱ':{p:'vel',m:'stop',h:'lax',s:'가'}, 'ㄲ':{p:'vel',m:'stop',h:'tense',s:'까'}, 'ㅋ':{p:'vel',m:'stop',h:'asp',s:'카'},
+  'ㅈ':{p:'pal',m:'affr',h:'lax',s:'자'}, 'ㅉ':{p:'pal',m:'affr',h:'tense',s:'짜'}, 'ㅊ':{p:'pal',m:'affr',h:'asp',s:'차'},
+  'ㅅ':{p:'alv',m:'fric',h:'lax',s:'사'}, 'ㅆ':{p:'alv',m:'fric',h:'tense',s:'싸'}, 'ㅎ':{p:'glot',m:'fric',h:null,s:'하'},
+  'ㅁ':{p:'lab',m:'nasal',h:null,s:'마'}, 'ㄴ':{p:'alv',m:'nasal',h:null,s:'나'}, 'ㅇ':{p:'vel',m:'nasal',h:null,s:'앙'},
+  'ㄹ':{p:'alv',m:'liq',h:null,s:'라'},
+};
+// 혀 윗면 점 6개 (뿌리 → 혀끝)
+const T_REST = [[243,262],[228,222],[190,205],[150,207],[118,215],[96,226]];
+const VOW = {
+  'ㅣ':{tg:[[243,258],[222,222],[178,196],[140,186],[112,192],[94,222]], gap:5, jaw:2, rnd:0, h:'고', f:'전설', r:'평순', s:'이'},
+  'ㅔ':{tg:[[243,262],[223,224],[180,207],[142,201],[113,206],[94,225]], gap:9, jaw:6, rnd:0, h:'중', f:'전설', r:'평순', s:'에'},
+  'ㅐ':{tg:[[241,268],[225,230],[185,221],[145,217],[115,221],[95,233]], gap:14, jaw:10, rnd:0, h:'저', f:'전설', r:'평순', s:'애'},
+  'ㅟ':{tg:[[243,258],[222,222],[178,196],[140,186],[112,192],[94,222]], gap:5, jaw:2, rnd:1, h:'고', f:'전설', r:'원순', s:'위'},
+  'ㅚ':{tg:[[243,262],[223,224],[180,207],[142,201],[113,206],[94,225]], gap:8, jaw:6, rnd:1, h:'중', f:'전설', r:'원순', s:'외'},
+  'ㅡ':{tg:[[238,250],[214,189],[186,193],[150,206],[118,216],[96,228]], gap:5, jaw:3, rnd:0, h:'고', f:'후설', r:'평순', s:'으'},
+  'ㅓ':{tg:[[236,262],[221,206],[190,210],[150,217],[118,225],[96,235]], gap:12, jaw:9, rnd:0, h:'중', f:'후설', r:'평순', s:'어'},
+  'ㅏ':{tg:[[238,276],[226,238],[190,229],[150,231],[118,235],[97,241]], gap:20, jaw:15, rnd:0, h:'저', f:'후설', r:'평순', s:'아'},
+  'ㅜ':{tg:[[236,248],[211,186],[185,196],[150,210],[118,220],[96,230]], gap:5, jaw:3, rnd:1, h:'고', f:'후설', r:'원순', s:'우'},
+  'ㅗ':{tg:[[236,258],[219,200],[190,207],[150,216],[118,224],[96,234]], gap:9, jaw:7, rnd:1, h:'중', f:'후설', r:'원순', s:'오'},
+};
+const DIPH = [
+  ['ㅑ','ㅣ','ㅏ','야'],['ㅕ','ㅣ','ㅓ','여'],['ㅛ','ㅣ','ㅗ','요'],['ㅠ','ㅣ','ㅜ','유'],['ㅒ','ㅣ','ㅐ','얘'],['ㅖ','ㅣ','ㅔ','예'],
+  ['ㅘ','ㅗ','ㅏ','와'],['ㅙ','ㅗ','ㅐ','왜'],['ㅝ','ㅜ','ㅓ','워'],['ㅞ','ㅜ','ㅔ','웨'],['ㅢ','ㅡ','ㅣ','의'],
+];
+// 닫기(막기)·좁히기 자세
+const CLOSE = {
+  lab:{ gap:0, jaw:3 },
+  alv:{ tg:[[243,262],[225,222],[185,207],[145,205],[112,197],[96,190]] },
+  pal:{ tg:[[243,262],[222,218],[176,188],[140,176],[116,184],[100,214]] },
+  vel:{ tg:[[238,242],[206,174],[180,190],[150,207],[118,215],[96,226]] },
+};
+const NARROW = {
+  alv:{ tg:[[243,262],[225,222],[185,207],[145,206],[113,204],[97,199]] },
+  pal:{ tg:[[243,262],[222,220],[176,193],[140,184],[116,191],[100,216]] },
+};
+
+// ======================= 그림 =======================
+const NS = 'http://www.w3.org/2000/svg';
+const svg = document.getElementById('mouth');
+function el(tag, attrs, parent = svg) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; }
+
+svg.innerHTML = `
+<defs>
+  <radialGradient id="glow"><stop offset="0" stop-color="#ff3b5c" stop-opacity=".55"/><stop offset="1" stop-color="#ff3b5c" stop-opacity="0"/></radialGradient>
+</defs>
+<path d="M130,8 C90,15 78,55 84,100 C78,118 60,135 40,150 Q33,160 44,166 Q52,171 60,172 L64,206 L68,236 Q66,262 76,282 Q98,300 140,300 Q178,302 196,332 L202,440 L336,440 Q332,360 362,300 Q408,220 396,130 Q382,30 282,10 Q205,0 130,8 Z" fill="#ffdcc6"/>
+<path d="M58,165 L72,146 L110,128 L170,123 L232,131 L264,150 L264,163 L208,168 L170,166 L140,169 L112,177 L94,186 L74,178 Z" fill="#c9737f" opacity=".55"/>
+<path id="cav" fill="#7d3442"/>
+<path d="M240,300 L264,300 L264,440 L240,440 Z" fill="#7d3442"/>
+<path d="M58,165 L40,163" stroke="#c9737f" stroke-width="5" opacity=".55"/>
+`;
+const cav = svg.querySelector('#cav');
+const gJaw = el('g', {});
+const chin = el('path', { d:'M66,226 Q58,262 74,284 Q98,302 142,301 L150,262 L90,230 Z', fill:'#ffdcc6' }, gJaw);
+const lowTeeth = el('path', { d:'M80,223 L86,221 L92,240 L85,245 Z', fill:'#fff', stroke:'#e6dccf', 'stroke-width':1 }, gJaw);
+const tongue = el('path', { fill:'#ef6f7c', stroke:'#c94b5b', 'stroke-width':1.5 });
+el('path', { d:'M92,194 L100,188 L115,181 L140,174 L170,170 L200,171 L208,173', fill:'none', stroke:'#f4e4cf', 'stroke-width':9, 'stroke-linecap':'round', 'stroke-linejoin':'round' });
+const velum = el('path', { fill:'none', stroke:'#ec97a3', 'stroke-width':10, 'stroke-linecap':'round' });
+const uvula = el('circle', { r:5.5, fill:'#ec97a3' });
+el('path', { d:'M266,150 L266,440', stroke:'#e7a3ad', 'stroke-width':5 });
+el('path', { d:'M238,300 Q226,290 230,276', fill:'none', stroke:'#ec97a3', 'stroke-width':5, 'stroke-linecap':'round' });
+const upTeeth = el('path', { d:'M88,190 L82,192 L77,214 L84,215 L90,198 Z', fill:'#fff', stroke:'#e6dccf', 'stroke-width':1 });
+const upLip = el('path', { fill:'#e9868f' });
+const loLip = el('path', { fill:'#e9868f' });
+const glotBar = el('path', { stroke:'#8a56d6', 'stroke-width':4, 'stroke-linecap':'round' });
+// 목청 확대 그림
+el('path', { d:'M266,352 L318,368', stroke:'#b9a7d6', 'stroke-width':1.5, 'stroke-dasharray':'4 3' });
+el('circle', { cx:360, cy:376, r:44, fill:'#fff', stroke:'#d9cdea', 'stroke-width':2 });
+el('ellipse', { cx:360, cy:378, rx:30, ry:34, fill:'#5b2333' });
+const foldL = el('path', { stroke:'#f3d3d8', 'stroke-width':7, 'stroke-linecap':'round' });
+const foldR = el('path', { stroke:'#f3d3d8', 'stroke-width':7, 'stroke-linecap':'round' });
+const glotTxt = el('text', { x:360, y:436, 'text-anchor':'middle', 'font-size':12, fill:'#6b6275', 'font-family':'Noto Sans KR' });
+glotTxt.textContent = '위에서 본 목청';
+const glotState = el('text', { x:352, y:326, 'text-anchor':'middle', 'font-size':13, 'font-weight':700, fill:'#8a56d6', 'font-family':'Noto Sans KR' });
+// 이름표
+const LBL = [['코안(비강)',165,150],['입안',150,196],['혀',170,250],['목(인두)',300,250],['허파에서 오는 공기 ↑',196,420]];
+LBL.forEach(([t,x,y]) => { const e = el('text', { x, y, 'text-anchor':'middle', 'font-size':12.5, fill:'#fff', 'font-weight':700, 'font-family':'Noto Sans KR', 'paint-order':'stroke', stroke:'rgba(80,30,45,.55)', 'stroke-width':3, 'pointer-events':'none' }); e.textContent = t; if (t.startsWith('목(') || t.startsWith('허파')) { e.setAttribute('fill','#7a5a66'); e.setAttribute('stroke','#fffaf6'); } });
+// 공기 경로(보이지 않음)
+const pathOral = el('path', { d:'M252,436 L252,330 L250,252 L234,204 L205,191 L160,191 L130,195 L100,203 L76,211 L55,211 L8,211', fill:'none', stroke:'none' });
+const pathNasal = el('path', { d:'M252,436 L252,330 L256,232 L258,178 L242,150 L190,140 L120,147 L72,159 L42,163 L6,163', fill:'none', stroke:'none' });
+const gAir = el('g', {});
+const gFx = el('g', {});
+// 위치 표시
+const gPlace = el('g', {});
+const glowC = el('circle', { r:22, fill:'url(#glow)', opacity:0 });
+Object.entries(PLACE).forEach(([k,p]) => {
+  const g = el('g', { class:'pm', 'data-k':k, style:'cursor:pointer' }, gPlace);
+  const [x,y] = k === 'lab' ? [30,196] : k === 'alv' ? [100,176] : k === 'pal' ? [138,160] : k === 'vel' ? [212,158] : [236,365];
+  el('line', { x1:x, y1:y, x2:p.pt[0], y2:p.pt[1], stroke:p.hex, 'stroke-width':1.3 }, g);
+  el('circle', { cx:x, cy:y, r:8.5, fill:p.hex, stroke:'#fff', 'stroke-width':1.5 }, g);
+  const t = el('text', { x, y:y+4, 'text-anchor':'middle', 'font-size':11, 'font-weight':700, fill:'#fff', 'font-family':'Noto Sans KR' }, g); t.textContent = p.n;
+  g.addEventListener('click', () => showPlace(k));
+});
+gPlace.appendChild(glowC);
+
+// 상태
+const REST = { tg:T_REST, vel:0, gap:6, rnd:0, jaw:4, glot:12, tense:0, vib:0 };
+let cur = clone(REST);
+function clone(s) { return JSON.parse(JSON.stringify(s)); }
+const lens = { oral: pathOral.getTotalLength(), nasal: pathNasal.getTotalLength() };
+function nearestD(p, pt) { const L = p.getTotalLength(); let best = 0, bd = 1e9; for (let d = 0; d <= L; d += 2) { const q = p.getPointAtLength(d); const dd = (q.x-pt[0])**2 + (q.y-pt[1])**2; if (dd < bd) { bd = dd; best = d; } } return best; }
+const BLOCK = {}; Object.entries(PLACE).forEach(([k,p]) => BLOCK[k] = nearestD(pathOral, p.pt));
+BLOCK.lab = nearestD(pathOral, [60,211]);
+
+const air = { flow:'off', block:null, fric:null, strength:1, side:false };
+let particles = [], frees = [];
+
+function spline(pts) {
+  const n = pts.length; let d = `M${pts[0][0]},${pts[0][1]}`;
+  for (let i = 0; i < n; i++) {
+    const p0 = pts[(i-1+n)%n], p1 = pts[i], p2 = pts[(i+1)%n], p3 = pts[(i+2)%n];
+    d += ` C${(p1[0]+(p2[0]-p0[0])/6).toFixed(1)},${(p1[1]+(p2[1]-p0[1])/6).toFixed(1)} ${(p2[0]-(p3[0]-p1[0])/6).toFixed(1)},${(p2[1]-(p3[1]-p1[1])/6).toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+  }
+  return d + 'Z';
+}
+let tick = 0;
+function draw() {
+  const s = cur, j = s.jaw;
+  // 혀
+  const tip = s.tg[5];
+  const loop = [[240,300], ...s.tg, [tip[0]+6, tip[1]+14], [118, 252+j*.5], [165, 276+j*.3], [212,296]];
+  tongue.setAttribute('d', spline(loop));
+  // 입안
+  cav.setAttribute('d', `M76,198 L92,194 L100,188 L115,181 L140,174 L170,170 L200,171 L230,165 L264,156 L264,300 L238,300 L212,296 L165,${276+j*.3} L118,${252+j*.5} L84,${232+j} L74,${222+j} Z`);
+  gJaw.setAttribute('transform', `translate(0,${j})`);
+  // 여린입천장
+  const v = s.vel, ex = 258 + (236-258)*v, ey = 166 + (212-166)*v, cx = 232 + (224-232)*v, cy = 162 + (182-162)*v;
+  velum.setAttribute('d', `M206,172 Q${cx},${cy} ${ex},${ey}`);
+  uvula.setAttribute('cx', ex); uvula.setAttribute('cy', ey + 2*v);
+  // 입술
+  const r = s.rnd, fx = 45 - r*8, mid = 211 + j*.35, uy = mid - s.gap/2, ly = mid + s.gap/2 + j*.3;
+  const lw = 7 + r*3;
+  upLip.setAttribute('d', `M60,172 Q${fx+3},${180} ${fx},${uy-lw} Q${fx},${uy} ${fx+8},${uy} L${74-r*3},${uy-1} Q${70},${uy-8} 66,185 Z`);
+  loLip.setAttribute('d', `M${fx+8},${ly} L${76-r*3},${ly+1} Q72,${ly+10} 72,${ly+16} Q${fx+8},${ly+22} ${fx+2},${ly+lw} Q${fx-1},${ly+2} ${fx+8},${ly} Z`);
+  // 목청
+  let sp = s.glot; if (s.vib > .5) sp = 1.5 + Math.abs(Math.sin(tick*.9))*3;
+  const tc = s.tense > .5 ? '#ff5470' : '#f3d3d8';
+  foldL.setAttribute('d', `M360,348 L${360-sp},404`); foldR.setAttribute('d', `M360,348 L${360+sp},404`);
+  foldL.setAttribute('stroke', tc); foldR.setAttribute('stroke', tc);
+  const gw = Math.max(0, sp*0.5);
+  glotBar.setAttribute('d', `M240,352 L${252-gw},352 M${252+gw},352 L264,352`);
+  glotBar.setAttribute('stroke', s.tense > .5 ? '#ff3b5c' : '#8a56d6');
+  glotState.textContent = s.tense > .5 ? '꽉 조임! (긴장)' : s.vib > .5 ? '〰 떨림 (울림)' : s.glot > 18 ? '활짝 열림' : s.glot < 8 ? '좁은 틈' : '열림';
+}
+
+// 공기 알갱이
+function airLoop() {
+  tick++;
+  const want = air.flow === 'off' ? 0 : (air.flow === 'nasal' ? 1 : 1) * (air.strength >= 2 ? 3 : air.strength <= .5 ? .35 : 1);
+  if (Math.random() < want * .9) particles.push({ p: air.flow === 'nasal' ? 'nasal' : 'oral', d: Math.random()*10, v: 2.2 + Math.random()*1.2, o: (Math.random()-.5)*6 });
+  if (want >= 3 && Math.random() < .9) particles.push({ p:'oral', d: Math.random()*10, v: 3.4, o:(Math.random()-.5)*6 });
+  const nodes = gAir.childNodes;
+  while (nodes.length < particles.length) el('circle', { r:2.6, fill:'#3aa7ff', opacity:.8 }, gAir);
+  particles = particles.filter(q => {
+    const P = q.p === 'oral' ? pathOral : pathNasal, L = lens[q.p];
+    let sp = q.v * (air.strength >= 2 ? 1.7 : 1);
+    if (q.p === 'oral' && air.flow === 'nasal' && q.d > 200) return false;
+    if (q.p === 'nasal' && air.flow === 'oral' && q.d > 300) sp = q.v;
+    q.d += sp;
+    if (q.p === 'oral' && air.block != null) { const lim = air.block - 4 - (q.o + 3) * 1.6; if (q.d > lim) { q.d = lim; q.stuck = true; } }
+    return q.d < L;
+  });
+  for (let i = 0; i < nodes.length; i++) {
+    const c = nodes[i], q = particles[i];
+    if (!q) { c.setAttribute('opacity', 0); continue; }
+    const pt = (q.p === 'oral' ? pathOral : pathNasal).getPointAtLength(q.d);
+    c.setAttribute('cx', pt.x + (q.stuck ? Math.random()*2-1 : 0)); c.setAttribute('cy', pt.y + q.o*.6 + (q.stuck ? Math.random()*2-1 : 0));
+    c.setAttribute('opacity', .8);
+    c.setAttribute('fill', q.p === 'nasal' ? '#22b8a6' : '#3aa7ff');
+  }
+  if (particles.length > 260) particles.splice(0, particles.length - 260);
+  // 자유 입자(거센 숨, 터짐)
+  gFx.querySelectorAll('.free').forEach(n => n.remove());
+  frees = frees.filter(f => { f.x += f.vx; f.y += f.vy; f.vx *= .97; f.vy *= .97; f.life--; return f.life > 0; });
+  frees.forEach(f => el('circle', { class:'free', cx:f.x, cy:f.y, r:f.r, fill:'#3aa7ff', opacity:Math.min(.7, f.life/30) }, gFx));
+  // 마찰 표시
+  gFx.querySelectorAll('.fric').forEach(n => n.remove());
+  if (air.fric) {
+    const [x,y] = air.fric === 'glot' ? [252,346] : air.fric === 'alv' ? [86,203] : [112,199];
+    for (let i = 0; i < 3; i++) {
+      const yy = y - 6 + i*6 + (Math.random()*2-1), xx = x - (tick % 6);
+      el('path', { class:'fric', d:`M${xx},${yy} l-4,-3 l-4,3 l-4,-3 l-4,3`, fill:'none', stroke:'#ffd43b', 'stroke-width':2, 'stroke-linecap':'round' }, gFx);
+    }
+  }
+  draw();
+  requestAnimationFrame(airLoop);
+}
+
+function burst(k, big) {
+  const [x,y] = k === 'lab' ? [44,211] : PLACE[k].pt;
+  const t = el('text', { x:x-4, y:y-10, 'text-anchor':'middle', 'font-size':big ? 22 : 17, 'font-family':'Jua', fill:'#d8343c', 'paint-order':'stroke', stroke:'#fff', 'stroke-width':4 }, gFx);
+  t.textContent = '팡!';
+  t.animate([{ opacity:1, transform:'translateY(0)' }, { opacity:0, transform:'translateY(-14px)' }], { duration:900 * SP, fill:'forwards' });
+  setTimeout(() => t.remove(), 950 * SP);
+}
+function puff(n, label) {
+  for (let i = 0; i < n; i++) frees.push({ x:44, y:211 + (Math.random()-.5)*6, vx:-(2 + Math.random()*3.5), vy:(Math.random()-.5)*2.2, life:40 + Math.random()*25, r:2 + Math.random()*2.5 });
+  if (label) {
+    const t = el('text', { x:16, y:190, 'text-anchor':'start', 'font-size':18, 'font-family':'Jua', fill:'#1565c0', 'paint-order':'stroke', stroke:'#fff', 'stroke-width':4 }, gFx);
+    t.textContent = label; t.animate([{ opacity:1 }, { opacity:0 }], { duration:1300 * SP, fill:'forwards' }); setTimeout(() => t.remove(), 1350 * SP);
+  }
+}
+function glowAt(k) {
+  if (!k) { glowC.setAttribute('opacity', 0); return; }
+  const [x,y] = k === 'lab' ? [48,211] : PLACE[k].pt;
+  glowC.setAttribute('cx', x); glowC.setAttribute('cy', y); glowC.setAttribute('opacity', 1);
+}
+
+// ======================= 애니메이션 =======================
+let SP = 1, runId = 0;
+const ease = t => t < .5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2;
+function lerpState(a, b, t) {
+  const o = clone(a);
+  if (b.tg) o.tg = a.tg.map((p,i) => [p[0] + (b.tg[i][0]-p[0])*t, p[1] + (b.tg[i][1]-p[1])*t]);
+  ['vel','gap','rnd','jaw','glot','tense','vib'].forEach(k => { if (b[k] != null) o[k] = a[k] + (b[k]-a[k])*t; });
+  return o;
+}
+function tween(target, ms, id) {
+  return new Promise(res => {
+    for (const k in REST) if (k !== 'tg' && !Number.isFinite(cur[k])) cur[k] = REST[k];
+    const from = clone(cur), t0 = performance.now(), dur = ms * SP;
+    if (target.tense != null) cur.tense = target.tense;
+    function f(now) {
+      if (id !== runId) return res(false);
+      const t = Math.min(1, (now - t0) / Math.max(1,dur));
+      const keep = { tense: cur.tense };
+      cur = lerpState(from, target, ease(t)); cur.tense = target.tense != null ? target.tense : keep.tense;
+      if (target.vib != null) cur.vib = target.vib;
+      t < 1 ? requestAnimationFrame(f) : res(true);
+    }
+    requestAnimationFrame(f);
+  });
+}
+const wait = (ms, id) => new Promise(r => setTimeout(() => r(id === runId), ms * SP));
+const mix = (...xs) => Object.assign({}, ...xs);
+
+// 단계 표시
+function setNow(titleHTML, steps) {
+  $('now').innerHTML = `<div class="title">${titleHTML}</div><ul class="steps">${steps.map((s,i) => `<li id="st${i}">${s}</li>`).join('')}</ul>`;
+}
+function step(i) { document.querySelectorAll('.steps li').forEach((li,j) => { li.className = j < i ? 'done' : j === i ? 'cur' : ''; }); }
+const $ = id => document.getElementById(id);
+const tagHTML = (t, c) => `<span class="tag" style="background:${c}">${t}</span>`;
+
+// 소리
+let soundOn = true;
+function speak(text) {
+  if (!soundOn || !('speechSynthesis' in window)) return;
+  try {
+    const u = new SpeechSynthesisUtterance(text); u.lang = 'ko-KR'; u.rate = SP > 1 ? .55 : .8;
+    const v = speechSynthesis.getVoices().find(v => /^ko/i.test(v.lang)); if (v) u.voice = v;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  } catch(e) {}
+}
+function checkVoice() { if (!('speechSynthesis' in window)) { $('warn').style.display = 'block'; return; } const v = speechSynthesis.getVoices(); if (v.length) $('warn').style.display = v.some(x => /^ko/i.test(x.lang)) ? 'none' : 'block'; }
+if ('speechSynthesis' in window) { speechSynthesis.onvoiceschanged = checkVoice; setTimeout(checkVoice, 800); }
+function toggleSound() { soundOn = !soundOn; $('sndBtn').textContent = soundOn ? '🔊 소리 켜짐' : '🔇 소리 꺼짐'; $('sndBtn').classList.toggle('on', soundOn); }
+function toggleSlow() { SP = SP > 1 ? 1 : 2.2; $('slowBtn').classList.toggle('on', SP > 1); }
+
+let last = null;
+function replay() { if (last) last(); }
+function stopAll() { runId++; air.flow = 'off'; air.block = null; air.fric = null; air.strength = 1; particles = []; frees = []; }
+async function toRest() { stopAll(); const id = runId; glowAt(null); await tween(REST, 350, id); }
+
+// ----- 자음 -----
+async function playCons(ch, opts = {}) {
+  last = () => playCons(ch, opts);
+  markOn(ch);
+  stopAll(); const id = runId;
+  const c = CONS[ch], P = PLACE[c.p], M = MANNER[c.m], H = c.h ? PHON[c.h] : null;
+  const glotFor = { lax:{glot:10, tense:0, vib:0}, tense:{glot:0, tense:1, vib:0}, asp:{glot:22, tense:0, vib:0} };
+  const V = mix(VOW['ㅏ'], { glot:0, tense:0, vib:1, vel:0 });
+  const closeSt = mix(REST, CLOSE[c.p] || {}, c.h ? glotFor[c.h] : { glot:10, tense:0, vib:0 });
+  const word = opts.word || c.s;
+  const title = `<big>${ch}</big><span>${opts.word ? `'${opts.word}'` : `'${c.s}'`}</span><span class="tags">${tagHTML(P.name + '(' + P.han + ')', P.hex)}${tagHTML(M.name, M.color)}${H ? tagHTML(H.name, H.color) : ''}</span>`;
+  let S = [];
+  const who = P.who;
+  const phLine = !H ? '' : c.h === 'lax' ? '예사소리: 목청을 편하게 열어 두어요.' : c.h === 'tense' ? '된소리: 목청을 <b>꽉 조여</b> 긴장시켜요. (목청 그림이 빨개져요)' : '거센소리: 목청을 <b>활짝 열고</b> 숨을 많이 모아요.';
+  const relLine = !H ? '' : c.h === 'lax' ? '살짝 터지며 약한 바람이 나와요.' : c.h === 'tense' ? '단단하고 짧게 터져요. 바람은 거의 없어요.' : '<b>\'후~\' 하고 센 바람</b>이 함께 터져 나와요!';
+  await tween(REST, 200, id); if (id !== runId) return;
+  glowAt(c.p);
+
+  if (c.m === 'stop' || c.m === 'affr') {
+    S = [`① 막기: <b>${who}</b>${c.p === 'lab' ? '을 꼭 다물어' : '을 맞닿게 해'} 공기 길을 꽉 막아요. ${phLine}`,
+         c.m === 'stop' ? `② 터뜨리기: 막은 곳을 한꺼번에 열어요. ${relLine}` : `② 천천히 열기: 막은 곳을 조금씩 열며 좁은 틈으로 공기를 <b>비벼</b> 내요. ${relLine}`,
+         `③ 모음 ㅏ로 이어지며 목청이 떨려요 → <b>'${word}'</b>`];
+    setNow(title, S); step(0);
+    air.flow = 'oral'; air.block = BLOCK[c.p]; air.strength = c.h === 'asp' ? 2 : c.h === 'tense' ? .5 : 1;
+    if (!await tween(closeSt, 320, id)) return;
+    if (!await wait(c.h === 'asp' ? 1300 : 1000, id)) return;
+    step(1); speak(word);
+    if (c.m === 'stop') {
+      air.block = null; burst(c.p, c.h !== 'lax');
+      if (c.h === 'asp') puff(40, '후~'); else if (c.h === 'lax') puff(8);
+      if (!await tween(mix(V, { glot: c.h === 'asp' ? 22 : c.h === 'tense' ? 0 : 8, vib:0 }), 140, id)) return;
+      if (!await wait(c.h === 'asp' ? 650 : 300, id)) return;
+    } else {
+      air.block = null; air.fric = 'pal';
+      if (!await tween(mix(REST, NARROW.pal, c.h ? glotFor[c.h] : {}), 220, id)) return;
+      if (c.h === 'asp') puff(30, '후~');
+      if (!await wait(700, id)) return;
+      air.fric = null;
+    }
+    step(2); air.strength = 1;
+    if (!await tween(V, 260, id)) return;
+    await wait(1100, id);
+  } else if (c.m === 'fric' && c.p === 'alv') {
+    S = [`① 좁히기: <b>혀끝을 윗잇몸에 아주 가까이</b> — 닿지는 않게! 좁은 틈을 만들어요. ${phLine}`,
+         `② 그 틈으로 공기를 계속 내보내면 '스~' 하고 <b>마찰</b>하는 소리가 나요.${c.h === 'tense' ? ' 된소리라 더 단단하고 날카로워요.' : ''}`,
+         `③ 모음 ㅏ로 이어져요 → <b>'${word}'</b>`];
+    setNow(title, S); step(0);
+    if (!await tween(mix(REST, NARROW.alv, glotFor[c.h]), 320, id)) return;
+    step(1); air.flow = 'oral'; air.fric = 'alv'; air.strength = c.h === 'tense' ? .7 : 1; speak(word);
+    if (!await wait(1500, id)) return;
+    step(2); air.fric = null;
+    if (!await tween(V, 260, id)) return;
+    await wait(1100, id);
+  } else if (c.m === 'fric') { // ㅎ
+    S = ['① 입은 다음 모음 모양으로 벌린 채, <b>두 목청 사이를 좁혀</b> 틈을 만들어요.',
+         '② 그 틈으로 숨이 지나가며 \'흐~\' 하고 <b>목에서 마찰</b>이 생겨요. (오른쪽 아래 목청 그림을 보세요)',
+         `③ 목청이 떨리며 모음 ㅏ로 이어져요 → <b>'${word}'</b>`];
+    setNow(title, S); step(0);
+    if (!await tween(mix(VOW['ㅏ'], { glot:5, tense:0, vib:0 }), 320, id)) return;
+    step(1); air.flow = 'oral'; air.fric = 'glot'; puff(10); speak(word);
+    if (!await wait(1500, id)) return;
+    step(2); air.fric = null;
+    if (!await tween(V, 260, id)) return;
+    await wait(1100, id);
+  } else if (c.m === 'nasal' && ch === 'ㅇ') {
+    S = ['① 첫소리 ㅇ은 소리가 없어요. 먼저 모음 ㅏ를 소리 내요.',
+         '② 혀 뒷부분을 <b>여린입천장</b>에 붙여 입 길을 막고, 여린입천장(목젖)을 <b>내려</b> 코 길을 열어요.',
+         '③ 공기가 <b>코로</b> 나가며 코가 울려요 → 받침 ㅇ <b>\'앙\'</b> [ŋ]'];
+    setNow(title, S); step(0); glowAt(null);
+    air.flow = 'oral'; speak('앙');
+    if (!await tween(V, 300, id)) return;
+    if (!await wait(500, id)) return;
+    step(1); glowAt('vel');
+    air.flow = 'nasal'; air.block = BLOCK.vel;
+    if (!await tween(mix(REST, CLOSE.vel, { vel:1, glot:0, vib:1, gap:10, jaw:8 }), 350, id)) return;
+    step(2); air.block = null;
+    await wait(1700, id);
+  } else if (c.m === 'nasal') {
+    S = [`① 막기: <b>${who}</b>${c.p === 'lab' ? '을 다물어' : '을 맞닿게 해'} 입 길을 막아요.`,
+         '② 여린입천장(목젖)을 <b>내려</b> 코 길을 열면, 공기가 <b>코로</b> 나가며 코가 울려요. (청록색 알갱이)',
+         `③ 입을 열고 여린입천장을 올리며 모음 ㅏ로 → <b>'${word}'</b>`];
+    setNow(title, S); step(0);
+    air.flow = 'oral'; air.block = BLOCK[c.p];
+    if (!await tween(mix(closeSt, { glot:0, vib:1 }), 300, id)) return;
+    step(1); air.flow = 'nasal'; speak(word);
+    if (!await tween(mix(closeSt, { vel:1, glot:0, vib:1 }), 280, id)) return;
+    if (!await wait(1300, id)) return;
+    step(2); air.block = null; air.flow = 'oral';
+    if (!await tween(V, 300, id)) return;
+    await wait(1000, id);
+  } else { // ㄹ
+    S = ['① 혀끝을 <b>윗잇몸</b>에 가볍게 대요. 목청은 떨려요.',
+         '② 받침 ㄹ(예: \'물\')은 혀끝을 댄 채 공기를 <b>혀 양옆으로 흘려</b> 보내요. (설측음)',
+         '③ 모음 사이·첫소리 ㄹ(예: \'나라\')은 혀끝으로 잇몸을 <b>한 번 톡 튕기고</b> 지나가요. (탄설음) → <b>\'라\'</b>'];
+    setNow(title, S); step(0);
+    air.flow = 'oral'; air.strength = .8;
+    if (!await tween(mix(REST, CLOSE.alv, { glot:0, vib:1 }), 300, id)) return;
+    step(1);
+    const sideT = el('text', { x:150, y:184, 'text-anchor':'middle', 'font-size':12, 'font-weight':700, fill:'#fff', 'font-family':'Noto Sans KR', 'paint-order':'stroke', stroke:'#5a6fd6', 'stroke-width':3 }, gFx);
+    sideT.textContent = '↙ 혀 양옆으로 ↘';
+    if (!await wait(1400, id)) { sideT.remove(); return; }
+    sideT.remove();
+    step(2); speak('라');
+    for (let i = 0; i < 2; i++) {
+      if (!await tween(mix(VOW['ㅏ'], { glot:0, vib:1 }), 160, id)) return;
+      if (!await wait(260, id)) return;
+      if (!await tween(mix(REST, CLOSE.alv, { glot:0, vib:1 }), 90, id)) return;
+    }
+    if (!await tween(mix(VOW['ㅏ'], { glot:0, vib:1 }), 200, id)) return;
+    await wait(1000, id);
+  }
+  if (id !== runId) return;
+  air.flow = 'off'; await tween(mix(REST, { vib:0 }), 400, id);
+}
+
+// ----- 모음 -----
+function vowelTitle(v) {
+  const d = VOW[v];
+  return `<big>${v}</big><span>'${d.s}'</span><span class="tags">${tagHTML(d.h + '모음', '#d8343c')}${tagHTML(d.f + '모음', '#3b7ddd')}${tagHTML(d.r + '모음', d.r === '원순' ? '#e84d8a' : '#6b8e23')}</span>`;
+}
+function vowelSteps(v) {
+  const d = VOW[v];
+  const hT = { '고':'혀를 <b>높이</b> 올려 입천장 가까이 — 입을 조금만 벌려요', '중':'혀를 <b>중간 높이</b>로 — 입을 알맞게 벌려요', '저':'혀를 <b>낮게</b> 내려 — 입을 크게 벌려요' }[d.h];
+  const fT = d.f === '전설' ? '혀의 가장 높은 곳이 입의 <b>앞쪽</b>(센입천장 아래)에 있어요' : '혀의 가장 높은 곳이 입의 <b>뒤쪽</b>(여린입천장 아래)에 있어요';
+  const rT = d.r === '원순' ? '입술을 <b>둥글게 오므려 앞으로</b> 내밀어요' : '입술을 <b>둥글게 하지 않고 평평하게</b> 두어요';
+  return [`혀 높이 · ${d.h}모음: ${hT}.`, `혀 앞뒤 · ${d.f}모음: ${fT}.`, `입술 모양 · ${d.r}모음: ${rT}.`, '모음은 공기 길을 막지 않아요. 목청이 떨리며 <b>입으로 술술</b> 나가요.'];
+}
+async function playVowel(v) {
+  last = () => playVowel(v);
+  markOn(v);
+  stopAll(); const id = runId; glowAt(null);
+  setNow(vowelTitle(v), vowelSteps(v)); step(0);
+  air.flow = 'oral'; air.strength = .6;
+  speak(VOW[v].s);
+  for (let i = 0; i < 3; i++) {
+    step(i);
+    if (i === 0 && !await tween(mix(VOW[v], { glot:0, vib:1, vel:0, tense:0 }), 650, id)) return;
+    if (!await wait(i === 0 ? 700 : 1100, id)) return;
+  }
+  step(3); speak(VOW[v].s);
+  await wait(1600, id);
+  if (id === runId) { air.flow = 'off'; cur.vib = 0; }
+}
+async function playDiph(d) {
+  const [ch, a, b, s] = d;
+  last = () => playDiph(d);
+  markOn(ch);
+  stopAll(); const id = runId; glowAt(null);
+  setNow(`<big>${ch}</big><span>'${s}'</span><span class="tags">${tagHTML(a + ' → ' + b, '#7a2e4a')}</span>`,
+    [`① 짧게 <b>${a}</b> 자세에서 시작해요 (반모음).`, `② 재빨리 <b>${b}</b> 자세로 미끄러지듯 옮겨 가요.`, `<b>${ch}</b>는 소리 내는 동안 혀나 입술 모양이 <b>바뀌는</b> 이중 모음이에요. ${b === 'ㅣ' ? '' : ''}`]);
+  step(0); air.flow = 'oral'; air.strength = .6;
+  if (!await tween(mix(VOW[a], { glot:0, vib:1, vel:0, tense:0 }), 350, id)) return;
+  if (!await wait(150, id)) return;
+  speak(s); step(1);
+  if (!await tween(mix(VOW[b], { glot:0, vib:1 }), 450, id)) return;
+  step(2);
+  if (!await wait(1300, id)) return;
+  air.flow = 'off'; cur.vib = 0;
+}
+async function playSeq(list, label) {
+  stopAll(); const id0 = runId;
+  for (const x of list) {
+    if (runId !== id0 && runId !== id0) {}
+    if (VOW[x]) await playVowel(x); else if (CONS[x]) await playCons(x); else if (Array.isArray(x)) await playCons(x[0], { word:x[1] });
+    const myId = runId; if (!await wait(350, myId)) return;
+  }
+  last = () => playSeq(list, label);
+}
+
+// 장소 눌렀을 때
+function showPlace(k) {
+  stopAll(); glowAt(k);
+  const p = PLACE[k], list = Object.keys(CONS).filter(c => CONS[c].p === k);
+  setNow(`<span class="tag" style="background:${p.hex};font-size:15px">${p.n}</span> ${p.name} <small style="color:#6b6275">(${p.han})</small>`,
+    [p.desc, `이곳에서 나는 자음: <b style="font-size:20px">${list.join(' ')}</b>`]);
+  step(1);
+  document.querySelectorAll('.places button').forEach(b => b.classList.toggle('on', b.dataset.k === k));
+}
+
+// ======================= 오른쪽 화면 =======================
+$('places').innerHTML = Object.entries(PLACE).map(([k,p]) => `<button data-k="${k}" style="color:${p.hex}" onclick="showPlace('${k}')"><i style="background:${p.hex}">${p.n}</i><span style="color:var(--ink)">${p.name}</span></button>`).join('');
+
+function cell(ch) { return ch ? `<td><button data-ch="${ch}" onclick="playCons('${ch}')">${ch}</button></td>` : '<td class="empty"></td>'; }
+const COLS = ['lab','alv','pal','vel','glot'];
+const ROWS = [
+  ['stop','lax',['ㅂ','ㄷ','','ㄱ','']], ['stop','tense',['ㅃ','ㄸ','','ㄲ','']], ['stop','asp',['ㅍ','ㅌ','','ㅋ','']],
+  ['affr','lax',['','','ㅈ','','']], ['affr','tense',['','','ㅉ','','']], ['affr','asp',['','','ㅊ','','']],
+  ['fric','lax',['','ㅅ','','','ㅎ']], ['fric','tense',['','ㅆ','','','']],
+  ['nasal',null,['ㅁ','ㄴ','','ㅇ','']], ['liq',null,['','ㄹ','','','']],
+];
+function consTable() {
+  let h = `<table class="ct"><colgroup><col style="width:17%"><col style="width:13%"></colgroup><tr><th class="corner" colspan="2"></th>${COLS.map(k => `<th onclick="showPlace('${k}')" style="color:${PLACE[k].hex}">${PLACE[k].name}<small>${PLACE[k].han}</small></th>`).join('')}</tr>`;
+  let prev = null;
+  ROWS.forEach(([m,ph,chs]) => {
+    const span = ROWS.filter(r => r[0] === m).length;
+    h += '<tr>';
+    if (m !== prev) h += `<th rowspan="${span}" onclick="showManner('${m}')" style="color:${MANNER[m].color}">${MANNER[m].name}</th>`;
+    h += ph ? `<th class="ph" onclick="showPhon('${ph}')" style="color:${PHON[ph].color}">${PHON[ph].name}</th>` : `<th class="ph" style="color:var(--sub)">—</th>`;
+    if (m === 'fric' && ph === 'lax') h += cell(chs[0]) + cell(chs[1]) + cell('') + cell('') + `<td rowspan="2"><button data-ch="ㅎ" onclick="playCons('ㅎ')" style="min-height:96px">ㅎ</button></td>`;
+    else if (m === 'fric') h += chs.slice(0,4).map(cell).join('');
+    else h += chs.map(cell).join('');
+    h += '</tr>'; prev = m;
+  });
+  return h + '</table>';
+}
+$('paneC').innerHTML = `
+  <h2>자음 체계표 — 글자를 눌러 보세요</h2>
+  <p class="desc">가로는 <b>어디에서</b>(조음 위치), 세로는 <b>어떻게</b>(조음 방법·소리의 세기) 소리 나는지예요. 제목 칸을 누르면 설명이 나와요.</p>
+  ${consTable()}
+  <div class="info" id="cinfo">💡 <b>세 가지 세기</b>: 같은 자리·같은 방법이라도 목청과 숨에 따라 <b>예사소리 · 된소리 · 거센소리</b>로 나뉘어요.</div>
+  <h3>🎧 소리 세기 비교 (예사 → 된 → 거센)</h3>
+  <div class="pairs">
+    <button class="btn" onclick="playSeq([['ㅂ','불'],['ㅃ','뿔'],['ㅍ','풀']])">불 · 뿔 · 풀</button>
+    <button class="btn" onclick="playSeq([['ㄷ','달'],['ㄸ','딸'],['ㅌ','탈']])">달 · 딸 · 탈</button>
+    <button class="btn" onclick="playSeq([['ㄱ','기'],['ㄲ','끼'],['ㅋ','키']])">기 · 끼 · 키</button>
+    <button class="btn" onclick="playSeq([['ㅈ','자다'],['ㅉ','짜다'],['ㅊ','차다']])">자다 · 짜다 · 차다</button>
+    <button class="btn" onclick="playSeq([['ㅅ','살'],['ㅆ','쌀']])">살 · 쌀</button>
+  </div>
+  <h3>🎧 소리 내는 방법 비교 (같은 잇몸 자리)</h3>
+  <div class="pairs">
+    <button class="btn" onclick="playSeq(['ㄷ','ㅅ','ㄴ','ㄹ'])">ㄷ(파열) · ㅅ(마찰) · ㄴ(비음) · ㄹ(유음)</button>
+    <button class="btn" onclick="playSeq(['ㅂ','ㅁ'])">ㅂ · ㅁ (입술)</button>
+    <button class="btn" onclick="playSeq(['ㄱ','ㅇ'])">ㄱ · ㅇ (여린입천장)</button>
+  </div>
+  <div class="tip">✋ <b>직접 해 보기</b><br>
+    · 입 앞에 <b>얇은 휴지</b>를 대고 '불 · 뿔 · 풀'을 말해 보세요. <b>'풀'</b>에서 휴지가 가장 크게 흔들려요 (거센소리).<br>
+    · <b>코를 막고</b> '마, 나'를 말해 보세요. 소리가 답답해져요 — 비음은 코로 나가는 소리니까요!<br>
+    · <b>목에 손</b>을 대고 '스~'와 '아~'를 번갈아 내 보세요. '아'에서만 떨림이 느껴져요.</div>`;
+
+function showManner(m) {
+  stopAll(); glowAt(null);
+  setNow(`${tagHTML(MANNER[m].name, MANNER[m].color)} <span>소리 내는 방법</span>`, [MANNER[m].desc, `해당 자음: <b style="font-size:20px">${Object.keys(CONS).filter(c => CONS[c].m === m).join(' ')}</b>`]); step(1);
+}
+function showPhon(h) {
+  stopAll(); glowAt('glot');
+  setNow(`${tagHTML(PHON[h].name, PHON[h].color)} <span>소리의 세기</span>`, [PHON[h].desc, `해당 자음: <b style="font-size:20px">${Object.keys(CONS).filter(c => CONS[c].h === h).join(' ')}</b>`]); step(1);
+  tween(mix(REST, h === 'lax' ? { glot:10, tense:0 } : h === 'tense' ? { glot:0, tense:1 } : { glot:22, tense:0 }), 400, runId);
+}
+
+// 모음 화면
+function vcell(v) { return v ? `<td><button data-ch="${v}" onclick="playVowel('${v}')">${v}</button></td>` : '<td class="empty"></td>'; }
+$('paneV').innerHTML = `
+  <h2>단모음 체계표 — 글자를 눌러 보세요</h2>
+  <p class="desc">단모음은 소리 내는 동안 <b>혀와 입술이 움직이지 않는</b> 모음이에요. 혀의 <b>높이</b>(고·중·저), 혀의 <b>앞뒤</b>(전설·후설), <b>입술 모양</b>(평순·원순)으로 나눠요.</p>
+  <table class="ct vt"><tr><th class="corner"></th><th colspan="2" style="color:#3b7ddd">전설 모음<small>혀 앞쪽</small></th><th colspan="2" style="color:#3b7ddd">후설 모음<small>혀 뒤쪽</small></th></tr>
+    <tr><th class="corner"></th><th style="color:#6b8e23">평순</th><th style="color:#e84d8a">원순</th><th style="color:#6b8e23">평순</th><th style="color:#e84d8a">원순</th></tr>
+    <tr><th style="color:#d8343c">고모음<small>혀 높이</small></th>${['ㅣ','ㅟ','ㅡ','ㅜ'].map(vcell).join('')}</tr>
+    <tr><th style="color:#d8343c">중모음</th>${['ㅔ','ㅚ','ㅓ','ㅗ'].map(vcell).join('')}</tr>
+    <tr><th style="color:#d8343c">저모음<small>혀 낮게</small></th>${['ㅐ','','ㅏ',''].map(vcell).join('')}</tr></table>
+  <h3>👅 혀의 위치 지도</h3>
+  <div class="vwrap"><svg id="trap" viewBox="0 0 300 190"></svg></div>
+  <p class="desc" style="margin-top:6px">빨간 점은 지금 <b>혀의 가장 높은 곳</b>이에요. 모음을 누르면 점이 움직여요. (왼쪽 = 입 앞쪽) 입술 모양은 왼쪽 그림의 <b>👄 앞에서 본 입</b>에서 함께 볼 수 있어요.</p>
+  <h3>🎧 비교해 보기</h3>
+  <div class="pairs">
+    <button class="btn" onclick="playSeq(['ㅣ','ㅔ','ㅐ'])">혀 높이 ↓ ㅣ · ㅔ · ㅐ</button>
+    <button class="btn" onclick="playSeq(['ㅡ','ㅓ','ㅏ'])">혀 높이 ↓ ㅡ · ㅓ · ㅏ</button>
+    <button class="btn" onclick="playSeq(['ㅣ','ㅡ'])">앞 → 뒤 ㅣ · ㅡ</button>
+    <button class="btn" onclick="playSeq(['ㅣ','ㅟ'])">입술 ㅣ · ㅟ</button>
+    <button class="btn" onclick="playSeq(['ㅡ','ㅜ'])">입술 ㅡ · ㅜ</button>
+    <button class="btn" onclick="playSeq(['ㅓ','ㅗ'])">입술 ㅓ · ㅗ</button>
+  </div>
+  <div class="grid3" style="margin-top:12px">
+    <div class="mini"><b style="color:#d8343c">고 · 중 · 저</b>혀가 높을수록 입은 조금 벌어지고, 낮을수록 크게 벌어져요. 거울을 보며 'ㅣ→ㅔ→ㅐ'를 해 보세요.</div>
+    <div class="mini"><b style="color:#3b7ddd">전설 · 후설</b>'ㅣ'는 혀가 앞으로, 'ㅡ'는 뒤로 가요. 'ㅣ-ㅡ-ㅣ-ㅡ'를 번갈아 하면 혀가 앞뒤로 움직이는 게 느껴져요.</div>
+    <div class="mini"><b style="color:#e84d8a">평순 · 원순</b>'ㅣ'를 내면서 입술만 동그랗게 오므리면 'ㅟ'가 돼요. 'ㅡ'에서 오므리면 'ㅜ'!</div>
+  </div>
+  <div class="tip">📌 표준 발음법에서 단모음은 10개예요. 다만 <b>ㅚ, ㅟ</b>는 이중 모음으로 발음하는 것도 허용해요. 또 요즘은 ㅔ와 ㅐ를 잘 구별하지 않고 소리 내는 사람이 많아요.</div>`;
+
+$('paneD').innerHTML = `
+  <h2>이중 모음 — 혀와 입술이 움직여요</h2>
+  <p class="desc">이중 모음은 <b>짧은 반모음</b>에서 시작해 <b>다른 단모음</b>으로 미끄러지듯 옮겨 가는 소리예요. 소리 내는 동안 혀나 입술 모양이 <b>바뀌어요</b>.</p>
+  <h3>ㅣ에서 시작 (반모음 [j])</h3>
+  <table class="ct vt"><tr>${DIPH.slice(0,6).map((d,i) => `<td><button data-ch="${d[0]}" onclick="playDiph(DIPH[${i}])">${d[0]}</button></td>`).join('')}</tr></table>
+  <h3>ㅗ·ㅜ에서 시작 (반모음 [w])</h3>
+  <table class="ct vt"><tr>${DIPH.slice(6,10).map((d,i) => `<td><button data-ch="${d[0]}" onclick="playDiph(DIPH[${i+6}])">${d[0]}</button></td>`).join('')}</tr></table>
+  <h3>ㅡ에서 시작</h3>
+  <table class="ct vt"><tr><td><button data-ch="ㅢ" onclick="playDiph(DIPH[10])">ㅢ</button></td><td class="empty"></td><td class="empty"></td><td class="empty"></td></tr></table>
+  <div class="tip">✋ 거울을 보며 'ㅣ+ㅏ = ㅑ', 'ㅗ+ㅏ = ㅘ'를 천천히 해 보세요. 처음엔 두 소리로 나눠 말하다가 점점 빨리 붙여 말하면 이중 모음이 돼요. 🐢 <b>천천히</b> 버튼을 켜면 움직임이 더 잘 보여요.</div>`;
+
+// 모음 사다리꼴 지도
+const trap = document.getElementById('trap');
+const TR = { fx0:30, fx1:270, top:22, bot:160 };
+function tongueTop(tg) { let b = tg[1]; for (let i = 1; i <= 4; i++) if (tg[i][1] < b[1]) b = tg[i]; return b; }
+function toTrap([x,y]) {
+  const fy = Math.max(0, Math.min(1, (y - 186) / 45)), fx = Math.max(0, Math.min(1, (x - 138) / 80));
+  const left = TR.fx0 + fy * 80;
+  return [left + (TR.fx1 - left) * fx, TR.top + fy * (TR.bot - TR.top)];
+}
+// 원순 모음 칸: 앞쪽은 평순 오른쪽, 뒤쪽은 평순이 원순 왼쪽에 오도록
+function vpos(tg, rnd) {
+  let [x,y] = toTrap(tongueTop(tg));
+  const back = x > (TR.fx0 + TR.fx1) / 2;
+  if (back) x = Math.min(x, TR.fx1 - 16) - (1 - rnd) * 28; else x += rnd * 26;
+  return [x, y];
+}
+trap.innerHTML = `<path d="M${TR.fx0},${TR.top} L${TR.fx1},${TR.top} L${TR.fx1},${TR.bot} L${TR.fx0+80},${TR.bot} Z" fill="#fbf7ff" stroke="#d9cdea" stroke-width="2"/>
+  <text x="${TR.fx0+12}" y="12" font-size="11" fill="#3b7ddd" font-family="Noto Sans KR">← 앞(전설)</text><text x="${TR.fx1}" y="12" font-size="11" fill="#3b7ddd" text-anchor="end" font-family="Noto Sans KR">뒤(후설) →</text>
+  <text x="6" y="${TR.top+6}" font-size="11" fill="#d8343c" font-family="Noto Sans KR">고</text><text x="40" y="${(TR.top+TR.bot)/2+4}" font-size="11" fill="#d8343c" font-family="Noto Sans KR">중</text><text x="${TR.fx0+60}" y="${TR.bot+4}" font-size="11" fill="#d8343c" font-family="Noto Sans KR">저</text>
+  <text x="150" y="183" font-size="11" fill="#6b6275" text-anchor="middle" font-family="Noto Sans KR">입 모양 크게 벌어짐 ↓</text>`;
+Object.entries(VOW).forEach(([v,d]) => {
+  const [x,y] = vpos(d.tg, d.rnd);
+  const g = document.createElementNS(NS, 'g'); g.style.cursor = 'pointer'; g.addEventListener('click', () => playVowel(v));
+  g.innerHTML = `<circle cx="${x}" cy="${y}" r="13" fill="${d.rnd ? '#ffe3ee' : '#eef6e2'}"/><text x="${x}" y="${y+6}" text-anchor="middle" font-size="17" font-family="Jua" fill="#2b2433">${v}</text>`;
+  trap.appendChild(g);
+});
+const tdot = document.createElementNS(NS, 'circle'); tdot.setAttribute('r', 6); tdot.setAttribute('fill', '#d8343c'); tdot.setAttribute('opacity', .85); trap.appendChild(tdot);
+// 앞에서 본 입술
+const lf = document.getElementById('lipsFront');
+lf.innerHTML = `
+  <defs><clipPath id="fmClip"><ellipse id="fmClipE" cx="80" cy="56"/></clipPath></defs>
+  <rect x="4" y="2" width="152" height="94" rx="30" fill="#ffdcc6"/>
+  <path d="M68,8 Q80,16 92,8" fill="none" stroke="#e8b89c" stroke-width="2.5" stroke-linecap="round"/>
+  <ellipse id="fmOpen" cx="80" cy="56" fill="#5b2333"/>
+  <g clip-path="url(#fmClip)">
+    <rect id="fmTeethU" fill="#fff"/><rect id="fmTeethL" fill="#f3efe9"/>
+    <ellipse id="fmTongue" fill="#ef6f7c"/>
+  </g>
+  <path id="fmUp" fill="#e9868f"/><path id="fmLo" fill="#e47a85"/>
+  <path id="fmSeam" fill="none" stroke="#a8505e" stroke-width="1.6" stroke-linecap="round"/>
+  <text id="fmPuff" x="10" y="30" font-size="13" font-family="Jua" fill="#1565c0" opacity="0">후~</text>
+  <text id="fmTxt" x="80" y="112" text-anchor="middle" font-size="12" font-weight="700" fill="#6b6275" font-family="Noto Sans KR"></text>`;
+const F = id => document.getElementById(id);
+const fm = { clip:F('fmClipE'), open:F('fmOpen'), tu:F('fmTeethU'), tl:F('fmTeethL'), tongue:F('fmTongue'), up:F('fmUp'), lo:F('fmLo'), seam:F('fmSeam'), puff:F('fmPuff'), txt:F('fmTxt') };
+(function frontLoop() {
+  const r = cur.rnd, g = cur.gap, cx = 80, cy = 56 + cur.jaw * .25;
+  const spread = (g < 10 && r < .5) ? (10 - g) * .6 : 0;
+  const w = 34 - r*18 + spread;                       // 입 너비의 절반
+  const h = g < .6 ? 0 : g*0.85 + r*3;                 // 입 벌림의 절반
+  const th = 9 + r*4;                                  // 입술 두께 (오므리면 도톰)
+  const L = cx - w - 5, R = cx + w + 5;
+  [fm.clip, fm.open].forEach(e => { e.setAttribute('cx', cx); e.setAttribute('cy', cy); e.setAttribute('rx', Math.max(.1, w)); e.setAttribute('ry', Math.max(.1, h)); });
+  fm.tu.setAttribute('x', cx - w*.75); fm.tu.setAttribute('width', w*1.5); fm.tu.setAttribute('y', cy - h - 1); fm.tu.setAttribute('height', Math.min(8, h*.55));
+  fm.tl.setAttribute('x', cx - w*.6); fm.tl.setAttribute('width', w*1.2); fm.tl.setAttribute('y', cy + h - Math.min(5, h*.3)); fm.tl.setAttribute('height', 6);
+  const lift = Math.max(0, (232 - cur.tg[3][1])) * .32;
+  fm.tongue.setAttribute('cx', cx); fm.tongue.setAttribute('cy', cy + h + 3 - lift); fm.tongue.setAttribute('rx', w*.8); fm.tongue.setAttribute('ry', 9);
+  fm.up.setAttribute('d', `M${L},${cy} Q${cx - w*.55},${cy - h - th - 4} ${cx - 5},${cy - h - th + 1} Q${cx},${cy - h - th + 4} ${cx + 5},${cy - h - th + 1} Q${cx + w*.55},${cy - h - th - 4} ${R},${cy} Q${cx + w*.5},${cy - h - 1} ${cx},${cy - h} Q${cx - w*.5},${cy - h - 1} ${L},${cy} Z`);
+  fm.lo.setAttribute('d', `M${L},${cy} Q${cx - w*.5},${cy + h + 1} ${cx},${cy + h} Q${cx + w*.5},${cy + h + 1} ${R},${cy} Q${cx + w*.6},${cy + h + th + 6} ${cx},${cy + h + th + 5} Q${cx - w*.6},${cy + h + th + 6} ${L},${cy} Z`);
+  fm.seam.setAttribute('d', h < .5 ? `M${L + 3},${cy} Q${cx},${cy + 1.5} ${R - 3},${cy}` : '');
+  fm.puff.setAttribute('opacity', frees.length > 15 ? .9 : 0);
+  fm.txt.textContent = g < 1 ? '입술을 꼭 다묾' : r > .5 ? '둥글게 오므려 내밂 (원순)' : g > 15 ? '입을 크게 벌림' : g < 8 ? '옆으로 평평하게 (평순)' : '알맞게 벌림 (평순)';
+  const [x,y] = vpos(cur.tg, r); tdot.setAttribute('cx', x); tdot.setAttribute('cy', y);
+  requestAnimationFrame(frontLoop);
+})();
+
+// 탭
+function setTab(t) {
+  ['C','V','D'].forEach(k => { $('pane'+k).hidden = k !== t; $('tab'+k).classList.toggle('on', k === t); });
+}
+function markOn(ch) { document.querySelectorAll('[data-ch]').forEach(b => b.classList.toggle('on', b.dataset.ch === ch)); document.querySelectorAll('.places button').forEach(b => b.classList.remove('on')); }
+
+draw(); airLoop();
+</script>
+</body>
+</html>
