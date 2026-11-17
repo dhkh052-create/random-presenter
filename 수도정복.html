@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>세계 수도 정복</title>
+<meta name="author" content="곱단이 선생님">
+<meta name="description" content="세계 지도에서 나라를 클릭하고 수도를 맞혀 세계를 정복하는 게임 · 제작 곱단이 선생님">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#22303f; --sub:#5d6b7a; --sea:#d9eefb; --card:#ffffff; --red:#d8343c; --gold:#f2b632; --green:#1f9d6b; --blue:#2f7de1; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; background:linear-gradient(180deg,#eaf6ff,#fdf7ec); color:var(--ink); font-family:'Noto Sans KR','Malgun Gothic',sans-serif; min-height:100%; }
+  .jua { font-family:'Jua','Noto Sans KR',sans-serif; font-weight:400; }
+  .wrap { max-width:1400px; margin:0 auto; padding:10px 16px 20px; }
+  header { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; margin-bottom:8px; }
+  h1 { margin:0; font-family:'Jua',sans-serif; font-weight:400; font-size:30px; color:#1d4f91; letter-spacing:-.5px; }
+  h1 span { color:var(--red); }
+  .pill { background:#fff; border-radius:999px; padding:6px 14px; box-shadow:0 2px 0 rgba(0,0,0,.08); font-family:'Jua',sans-serif; font-size:17px; white-space:nowrap; }
+  .pill b { color:var(--red); font-weight:400; }
+  .spacer { flex:1; }
+  .tabs { display:flex; background:#fff; border-radius:999px; padding:4px; box-shadow:0 2px 0 rgba(0,0,0,.08); }
+  .tabs button { border:0; background:transparent; font-family:'Jua',sans-serif; font-size:16px; padding:6px 14px; border-radius:999px; cursor:pointer; color:var(--sub); }
+  .tabs button.on { background:#1d4f91; color:#fff; }
+  .btn { border:0; border-radius:12px; padding:9px 14px; font-family:'Jua',sans-serif; font-size:16px; cursor:pointer; background:#eef2f7; color:var(--ink); box-shadow:0 3px 0 rgba(0,0,0,.12); }
+  .btn:active { transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.12); }
+  .btn.primary { background:var(--blue); color:#fff; box-shadow:0 3px 0 #1d5bb0; }
+  .btn.gold { background:#ffd65a; color:#5a4200; box-shadow:0 3px 0 #d6a91f; }
+  .btn.ghost { background:#fff; }
+  .btn:disabled { opacity:.45; cursor:default; transform:none; }
+
+  .main { display:grid; grid-template-columns:minmax(0,1fr) 360px; gap:14px; align-items:start; }
+  .mapbox { position:relative; background:var(--sea); border-radius:20px; overflow:hidden; box-shadow:0 4px 0 rgba(0,0,0,.07), inset 0 0 0 2px #c3e1f5; }
+  #map { display:block; width:100%; height:auto; aspect-ratio:960/500; cursor:grab; touch-action:none; }
+  #map:active { cursor:grabbing; }
+  #map path { stroke:#ffffff; stroke-width:.7; vector-effect:non-scaling-stroke; stroke-linejoin:round; transition:fill .25s; }
+  #map path.c { cursor:pointer; }
+  #map path.c:hover { filter:brightness(.92); }
+  #map path.nodata { fill:#e3e6ea; cursor:default; }
+  .k-AS { fill:#f6d59e; } .k-EU { fill:#bcd5f3; } .k-AF { fill:#f2bd97; }
+  .k-NA { fill:#c4e3b7; } .k-SA { fill:#e3c6e6; } .k-OC { fill:#b2e2dd; }
+  .k-plain { fill:#cfd8e2; }
+  #map .win { fill:#ffc83a; }
+  #map .fail { fill:#f39a92; }
+  #map path.sel { stroke:#d8343c; stroke-width:2.4; }
+  #map path.wrong { fill:#ff6b6b !important; }
+  #map path.target { fill:#ff5a5a !important; animation:blink .8s infinite alternate; }
+  @keyframes blink { from { opacity:1; } to { opacity:.35; } }
+  #map circle.mk { stroke:#fff; vector-effect:non-scaling-stroke; stroke-width:1.2; cursor:pointer; }
+  #map circle.mk.sel { stroke:#d8343c; stroke-width:2.6; }
+  .tip { position:absolute; pointer-events:none; background:rgba(25,35,50,.88); color:#fff; padding:4px 10px; border-radius:8px; font-size:14px; white-space:nowrap; transform:translate(-50%,-130%); display:none; z-index:5; }
+  .zoomctl { position:absolute; right:10px; top:10px; display:flex; flex-direction:column; gap:6px; }
+  .zoomctl button { width:38px; height:38px; border:0; border-radius:10px; background:#fff; font-size:20px; cursor:pointer; box-shadow:0 2px 0 rgba(0,0,0,.15); }
+  .conts { position:absolute; left:10px; bottom:10px; display:flex; flex-wrap:wrap; gap:5px; max-width:calc(100% - 20px); }
+  .conts button { border:0; border-radius:999px; padding:5px 11px; background:rgba(255,255,255,.92); font-family:'Jua',sans-serif; font-size:14px; cursor:pointer; box-shadow:0 2px 0 rgba(0,0,0,.12); }
+  .loading { position:absolute; inset:0; display:grid; place-items:center; font-family:'Jua',sans-serif; font-size:22px; color:#1d4f91; }
+  .legend { display:flex; flex-wrap:wrap; gap:10px; font-size:13px; color:var(--sub); margin:8px 4px 0; }
+  .legend i { display:inline-block; width:12px; height:12px; border-radius:3px; vertical-align:-1px; margin-right:4px; }
+
+  .panel { background:var(--card); border-radius:20px; padding:16px; box-shadow:0 4px 0 rgba(0,0,0,.07); min-height:300px; }
+  .welcome h2 { font-family:'Jua',sans-serif; font-weight:400; margin:0 0 8px; font-size:24px; color:#1d4f91; }
+  .welcome p, .welcome li { font-size:14.5px; line-height:1.6; color:#3d4b5a; }
+  .welcome ul { padding-left:18px; margin:6px 0 12px; }
+  .chead { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+  .flag { width:64px; height:44px; object-fit:cover; border-radius:6px; box-shadow:0 0 0 1px rgba(0,0,0,.12); background:#eee; flex:none; }
+  .cname { font-family:'Jua',sans-serif; font-size:26px; line-height:1.1; }
+  .badges { display:flex; flex-wrap:wrap; gap:5px; margin-top:4px; }
+  .badge { font-size:12px; padding:2px 8px; border-radius:999px; background:#eef2f7; color:var(--sub); font-weight:700; }
+  .badge.t3 { background:#ffe3e3; color:#c2253a; }
+  .badge.t2 { background:#fff1cc; color:#9a6a00; }
+  .badge.t1 { background:#e2f4ea; color:#1f7a50; }
+  .intro { background:#f6f9fc; border-radius:12px; padding:10px 12px; font-size:14.5px; line-height:1.65; margin:10px 0 12px; }
+  .intro b { color:#1d4f91; }
+  .q { font-family:'Jua',sans-serif; font-size:19px; margin:4px 0 8px; }
+  .row { display:flex; gap:8px; }
+  .answer { flex:1; min-width:0; font-size:18px; padding:10px 12px; border-radius:12px; border:2px solid #cfd8e2; font-family:inherit; outline:none; }
+  .answer:focus { border-color:var(--blue); }
+  .hintbox { margin-top:10px; display:flex; flex-direction:column; gap:6px; }
+  .hint { background:#fff8e1; border-left:4px solid var(--gold); padding:7px 10px; border-radius:8px; font-size:14.5px; }
+  .hint big { font-family:'Jua',sans-serif; font-size:22px; letter-spacing:3px; color:#9a6a00; }
+  .choices { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .choices .btn { font-size:15px; padding:9px 6px; }
+  .tries { font-size:13px; color:var(--sub); margin-top:6px; }
+  .msg { margin-top:10px; padding:10px 12px; border-radius:12px; font-size:15px; line-height:1.55; }
+  .msg.ok { background:#e3f7ec; color:#155d3c; }
+  .msg.no { background:#ffe8e6; color:#8f1f1f; }
+  .msg.info { background:#eaf2ff; color:#1d4f91; }
+  .msg .big { font-family:'Jua',sans-serif; font-size:24px; display:block; margin-bottom:2px; }
+  .note { margin-top:8px; font-size:13.5px; color:#5a4a20; background:#fff6d8; border-radius:10px; padding:8px 10px; line-height:1.55; }
+  .actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .prog { margin-top:14px; border-top:1px dashed #d5dde6; padding-top:10px; }
+  .prog h3 { margin:0 0 6px; font-family:'Jua',sans-serif; font-weight:400; font-size:16px; color:var(--sub); }
+  .bar { display:grid; grid-template-columns:76px 1fr 54px; align-items:center; gap:8px; font-size:13px; margin:4px 0; }
+  .bar .tr { height:10px; background:#eef2f7; border-radius:99px; overflow:hidden; }
+  .bar .fi { height:100%; background:linear-gradient(90deg,#ffc83a,#ff9f1c); border-radius:99px; transition:width .5s; }
+  .bar span:last-child { text-align:right; color:var(--sub); }
+  .shake { animation:shake .35s; }
+  @keyframes shake { 20%,60% { transform:translateX(-6px); } 40%,80% { transform:translateX(6px); } }
+  .pop { position:fixed; pointer-events:none; font-family:'Jua',sans-serif; font-size:28px; color:var(--red); text-shadow:0 2px 0 #fff; animation:pop 1.2s ease-out forwards; z-index:30; }
+  @keyframes pop { from { opacity:1; transform:translate(-50%,0) scale(.8); } to { opacity:0; transform:translate(-50%,-70px) scale(1.2); } }
+  .modal { position:fixed; inset:0; background:rgba(20,30,45,.5); display:none; place-items:center; z-index:40; padding:16px; }
+  .modal.show { display:grid; }
+  .modal .box { background:#fff; border-radius:22px; padding:24px; max-width:420px; width:100%; text-align:center; }
+  .modal h2 { font-family:'Jua',sans-serif; font-weight:400; font-size:28px; margin:6px 0; color:#1d4f91; }
+  footer.credit { text-align:center; font-size:13px; color:#8a97a5; margin-top:16px; }
+  footer.credit b { color:#5d6b7a; }
+
+  @media (max-width:900px) {
+    .main { grid-template-columns:1fr; }
+    #map { aspect-ratio:auto; height:58vh; }
+    h1 { font-size:24px; }
+    .panel { min-height:0; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🌏 세계 <span>수도</span> 정복</h1>
+    <div class="tabs" role="tablist">
+      <button id="tabCap" class="on" onclick="setMode('cap')">🏛️ 수도 맞히기</button>
+      <button id="tabFind" onclick="setMode('find')">📍 나라 찾기</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="pill">점수 <b id="score">0</b></div>
+    <div class="pill" id="countPill">정복 <b id="cnt">0</b>/<span id="tot">0</span></div>
+    <div class="pill">🔥 <b id="streak">0</b>연속</div>
+    <div class="pill" id="rank">🧭 견습 탐험가</div>
+  </header>
+
+  <div class="main">
+    <div>
+      <div class="mapbox" id="mapbox">
+        <svg id="map" viewBox="0 0 960 500"></svg>
+        <div class="loading" id="loading">🌍 세계 지도를 펼치는 중…</div>
+        <div class="tip" id="tip"></div>
+        <div class="zoomctl">
+          <button onclick="zoomBy(1.6)" title="확대">＋</button>
+          <button onclick="zoomBy(1/1.6)" title="축소">－</button>
+          <button onclick="zoomCont('ALL')" title="전체 보기">🌐</button>
+        </div>
+        <div class="conts" id="conts"></div>
+      </div>
+      <div class="legend" id="legend"></div>
+    </div>
+    <aside class="panel" id="panel"></aside>
+  </div>
+  <footer class="credit">세계 수도 정복 · 제작 <b>곱단이 선생님</b> · © 2026 · 국경선 자료 Natural Earth</footer>
+</div>
+
+<div class="modal" id="modal"><div class="box" id="modalBox"></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<script>
+// 형식: 지도ID|나라|수도|다른 정답(쉼표)|난이도(1 유명·2 보통·3 희귀)|대륙|국기코드|소개|수도 이야기
+const RAW = `
+410|대한민국|서울||1|AS|kr|한반도 남쪽에 있는 우리나라예요. 한글을 쓰고, 반도체·K-팝·김치로 세계에 널리 알려져 있어요.|
+408|북한|평양||1|AS|kp|한반도 북쪽에 있는 나라로, 1948년부터 남한과 나뉘어 있어요. 민족의 영산 백두산이 있어요.|
+392|일본|도쿄|동경|1|AS|jp|4개의 큰 섬으로 이루어진 섬나라예요. 후지산, 애니메이션, 초밥으로 유명해요.|
+156|중국|베이징|북경|1|AS|cn|인구가 세계에서 손꼽히게 많은 나라예요. 만리장성, 판다, 수천 년의 역사로 유명해요.|
+158|대만|타이베이|타이페이|2|AS|tw|중국 남동쪽 바다에 있는 섬이에요. 반도체 산업과 버블티, 야시장으로 유명해요.|
+496|몽골|울란바토르|울란바타르|2|AS|mn|바다가 없는 넓은 초원의 나라예요. 칭기즈 칸의 나라이고, 이동식 천막집 '게르'에서 살기도 해요.|
+704|베트남|하노이||1|AS|vn|동남아시아의 길쭉한 S자 모양 나라예요. 쌀국수(퍼)와 커피, 하롱베이로 유명해요.|
+418|라오스|비엔티안|위앙짠|3|AS|la|동남아시아에서 유일하게 바다가 없는 나라예요. 메콩강이 흐르고 불교 사원이 많아요.|
+116|캄보디아|프놈펜||2|AS|kh|세계에서 가장 큰 사원 앙코르와트가 있는 나라예요. 국기에도 앙코르와트가 그려져 있어요.|
+764|태국|방콕||1|AS|th|동남아시아에서 한 번도 식민지가 된 적 없는 왕국이에요. 코끼리와 똠얌꿍으로 유명해요.|
+104|미얀마|네피도|네이피도|3|AS|mm|황금빛 불탑이 가득한 불교의 나라예요. 옛날에는 '버마'라고 불렸어요.|2005년에 가장 큰 도시 양곤에서 새로 만든 도시 네피도로 수도를 옮겼어요.
+458|말레이시아|쿠알라룸푸르||2|AS|my|말레이반도와 보르네오섬에 걸친 나라예요. 쌍둥이 빌딩 '페트로나스 타워'가 유명해요.|
+702|싱가포르|싱가포르||1|AS|sg|서울보다 조금 큰 도시 국가예요. 사자 머리 물고기 '멀라이언'이 상징이에요.|나라 전체가 하나의 도시라서 나라 이름과 수도 이름이 같아요.
+360|인도네시아|자카르타|누산타라|2|AS|id|1만 7천 개가 넘는 섬으로 이루어진 나라예요. 인구가 세계 4위이고, 보르네오섬으로 수도 이전을 추진하고 있어요.|보르네오섬에 새 수도 '누산타라'를 짓고 있어요. 누산타라라고 답해도 정답!
+608|필리핀|마닐라||1|AS|ph|7천 개가 넘는 섬으로 이루어진 나라예요. 영어를 널리 쓰고 아름다운 해변이 많아요.|
+096|브루나이|반다르스리브가완|반다르세리베가완,반다르스리베가완|3|AS|bn|보르네오섬에 있는 작은 이슬람 왕국이에요. 석유가 풍부해서 개인 소득세가 없어요.|
+626|동티모르|딜리||3|AS|tl|2002년에 독립한, 21세기 첫 번째 새 나라예요. 티모르섬의 동쪽 절반을 차지해요.|
+356|인도|뉴델리|델리|1|AS|in|인구가 세계에서 가장 많은 나라예요. 타지마할, 카레, 영화 산업 '발리우드'로 유명해요.|
+586|파키스탄|이슬라마바드||2|AS|pk|인더스 문명이 시작된 곳이에요. 세계에서 두 번째로 높은 봉우리 K2가 있어요.|1960년대에 수도로 쓰려고 새로 만든 계획도시예요. '이슬람의 도시'라는 뜻이에요.
+050|방글라데시|다카||2|AS|bd|갠지스강 하류의 땅으로, 인구 밀도가 매우 높은 나라예요. 옷을 많이 만들어 수출해요.|
+524|네팔|카트만두||2|AS|np|세계에서 가장 높은 에베레스트산이 있는 나라예요. 국기가 세계에서 유일하게 사각형이 아니에요.|
+064|부탄|팀부|팀푸|3|AS|bt|히말라야의 작은 왕국이에요. 돈보다 '국민 행복'을 중요하게 여기는 나라로 유명해요.|
+144|스리랑카|스리자야와르데네푸라코테|코테,콜롬보,스리자야와르다나푸라코테|3|AS|lk|인도 남쪽에 있는 눈물방울 모양의 섬나라예요. '실론 홍차'로 유명해요.|공식 수도는 스리자야와르데네푸라코테, 가장 큰 도시는 콜롬보예요. '코테'나 '콜롬보'도 정답으로 인정!
+462|몰디브|말레||3|AS|mv|인도양에 1,000개가 넘는 산호섬이 흩어져 있는 나라예요. 세계에서 땅이 가장 낮은 나라예요.|
+004|아프가니스탄|카불||2|AS|af|중앙아시아와 남아시아 사이의 산이 많은 나라예요. 옛날 실크로드가 지나던 곳이에요.|
+364|이란|테헤란||1|AS|ir|옛 페르시아 제국의 나라예요. 페르시아 양탄자와 석유로 유명해요.|서울에 '테헤란로'가 있을 만큼 우리나라와 인연이 있어요.
+368|이라크|바그다드||1|AS|iq|티그리스강과 유프라테스강 사이, 메소포타미아 문명이 시작된 곳이에요.|
+760|시리아|다마스쿠스||2|AS|sy|지중해 동쪽 나라예요. 사람이 계속 살아온 도시 중 세계에서 가장 오래된 도시가 수도예요.|
+422|레바논|베이루트||2|AS|lb|지중해 동쪽의 작은 나라예요. 국기에 '레바논 삼나무(백향목)'가 그려져 있어요.|
+400|요르단|암만||2|AS|jo|붉은 바위를 깎아 만든 고대 도시 '페트라'가 있어요. 몸이 둥둥 뜨는 사해와 맞닿아 있어요.|
+376|이스라엘|예루살렘||2|AS|il|지중해 동쪽에 있는 나라로, 유대교·기독교·이슬람교의 성지가 있어요. 첨단 기술 산업이 발달했어요.|이스라엘은 예루살렘을 수도로 정했지만 국제적으로 논란이 있어서, 많은 나라의 대사관은 텔아비브에 있어요.
+275|팔레스타인|라말라|예루살렘,동예루살렘|3|AS|ps|요르단강 서안 지구와 가자 지구로 이루어진 지역이에요. 많은 나라가 국가로 인정하고 있어요.|동예루살렘을 수도로 주장하지만, 실제 정부가 있는 곳은 라말라예요. 둘 다 정답!
+682|사우디아라비아|리야드||1|AS|sa|아라비아반도 대부분을 차지하는 나라예요. 이슬람교 최고의 성지 메카가 있어요.|
+887|예멘|사나|사나아|3|AS|ye|아라비아반도 남쪽 끝의 나라예요. 커피 '모카'라는 이름이 이 나라 항구에서 나왔어요.|
+512|오만|무스카트||3|AS|om|아라비아반도 남동쪽 끝의 나라예요. 귀한 향료 '유향'과 뱃사람 신드바드 이야기로 유명해요.|
+784|아랍에미리트|아부다비||2|AS|ae|7개의 토후국이 모인 나라예요. 세계에서 가장 높은 건물 '부르즈 할리파'가 있어요.|유명한 도시 두바이는 수도가 아니랍니다!
+634|카타르|도하||2|AS|qa|페르시아만으로 쏙 튀어나온 반도의 나라예요. 2022년 월드컵을 열었어요.|
+048|바레인|마나마||3|AS|bh|페르시아만에 있는 작은 섬나라예요. 바다를 건너는 긴 다리로 사우디아라비아와 이어져요.|
+414|쿠웨이트|쿠웨이트|쿠웨이트시티|1|AS|kw|페르시아만 안쪽의 작은 나라로 석유가 풍부해요. 돈(디나르)의 가치가 세계에서 가장 높아요.|
+792|튀르키예|앙카라||1|AS|tr|아시아와 유럽에 걸쳐 있는 나라예요. 옛 이름은 '터키'이고, 6·25 전쟁 때 우리나라를 도왔어요.|가장 큰 도시 이스탄불은 수도가 아니에요! 1923년부터 앙카라가 수도예요.
+268|조지아|트빌리시||3|AS|ge|캅카스산맥 남쪽의 나라예요. 와인을 가장 먼저 만든 곳 중 하나로 알려져 있어요.|
+051|아르메니아|예레반||3|AS|am|세계 최초로 기독교를 나라의 종교로 받아들인 나라예요. 노아의 방주 전설의 아라라트산이 보여요.|
+031|아제르바이잔|바쿠||3|AS|az|카스피해 서쪽의 '불의 나라'예요. 땅에서 가스가 새어 나와 꺼지지 않는 불이 있어요.|
+398|카자흐스탄|아스타나|누르술탄|2|AS|kz|바다와 닿지 않은 나라 중 가장 넓은 나라예요. 우주선을 쏘는 바이코누르 기지가 있어요.|1997년 알마티에서 옮겨 왔어요. 한때 '누르술탄'으로 이름이 바뀌었다가 다시 아스타나가 되었어요.
+860|우즈베키스탄|타슈켄트||2|AS|uz|실크로드의 푸른 도시 사마르칸트가 있는 나라예요. 고려인이 많이 살고 있어요.|
+795|투르크메니스탄|아시가바트|아슈하바트|3|AS|tm|국토 대부분이 사막이에요. 50년 넘게 불타는 가스 구덩이 '지옥의 문'이 있어요.|
+762|타지키스탄|두샨베||3|AS|tj|국토의 90% 이상이 산인 나라예요. '세계의 지붕' 파미르고원이 있어요.|
+417|키르기스스탄|비슈케크|비시케크|3|AS|kg|톈산산맥에 자리한 산악 국가예요. 얼지 않는 아름다운 호수 '이식쿨'이 있어요.|
+826|영국|런던||1|EU|gb|잉글랜드·스코틀랜드·웨일스·북아일랜드가 모인 나라예요. 축구의 종주국이고 셰익스피어의 나라예요.|
+372|아일랜드|더블린||2|EU|ie|'에메랄드섬'이라 불리는 초록빛 섬나라예요. 3월 17일 '성 패트릭의 날'이 유명해요.|
+250|프랑스|파리||1|EU|fr|루브르 박물관, 바게트와 치즈의 나라예요. 세계에서 관광객이 가장 많이 찾는 나라예요.|
+276|독일|베를린||1|EU|de|유럽에서 경제 규모가 가장 큰 나라예요. 자동차와 소시지, 1990년 통일로 유명해요.|
+380|이탈리아|로마||1|EU|it|장화 모양 반도의 나라예요. 피자와 파스타, 콜로세움, 르네상스 미술로 유명해요.|
+724|스페인|마드리드||1|EU|es|이베리아반도 대부분을 차지해요. 플라멩코 춤과 건축가 가우디의 성당으로 유명해요.|
+620|포르투갈|리스본||2|EU|pt|유럽 대륙 서쪽 끝의 나라예요. 대항해 시대를 연 나라이고, 에그타르트가 유명해요.|
+528|네덜란드|암스테르담||1|EU|nl|국토의 4분의 1이 바다보다 낮은 나라예요. 풍차와 튤립, 화가 고흐로 유명해요.|헌법상 수도는 암스테르담이지만, 국회와 정부는 헤이그에 있어요.
+056|벨기에|브뤼셀||2|EU|be|와플, 초콜릿, 감자튀김의 나라예요. 유럽연합(EU) 본부가 이 나라에 있어요.|
+442|룩셈부르크|룩셈부르크||1|EU|lu|유럽의 작은 대공국이에요. 1인당 소득이 세계 최고 수준이고 대중교통이 무료예요.|
+756|스위스|베른||2|EU|ch|알프스산맥의 나라예요. 시계, 초콜릿, 어느 편도 들지 않는 '영세 중립국'으로 유명해요.|가장 큰 도시 취리히나 제네바가 아니라 베른이 수도 역할을 해요.
+040|오스트리아|빈|비엔나|2|EU|at|모차르트가 태어난 '음악의 나라'예요. 국토 대부분이 알프스 산지예요.|
+438|리히텐슈타인|파두츠||3|EU|li|스위스와 오스트리아 사이의 아주 작은 나라예요. 바다에 가려면 나라를 두 번 건너야 해요.|
+492|모나코|모나코||1|EU|mc|바티칸 다음으로 작은 나라예요. 자동차 경주 'F1 그랑프리'로 유명해요.|
+674|산마리노|산마리노||1|EU|sm|이탈리아 안에 쏙 들어 있는, 세계에서 가장 오래된 공화국 중 하나예요. 티타노산 위에 있어요.|
+336|바티칸 시국|바티칸 시국|바티칸,바티칸시,바티칸시티|1|EU|va|세계에서 가장 작은 나라예요. 가톨릭 교황이 사는 곳이고, 이탈리아 로마 안에 있어요.|나라 전체가 하나의 도시예요.
+020|안도라|안도라라베야|안도라|3|EU|ad|프랑스와 스페인 사이 피레네산맥 속의 작은 나라예요. 스키장과 면세 쇼핑으로 유명해요.|
+470|몰타|발레타||3|EU|mt|지중해 한가운데의 작은 섬나라예요. 옛 기사단의 요새 도시와 영어 어학연수로 유명해요.|
+578|노르웨이|오슬로||2|EU|no|빙하가 깎아 만든 '피오르' 해안의 나라예요. 오로라와 연어로 유명해요.|
+752|스웨덴|스톡홀름||2|EU|se|노벨상과 가구 회사 이케아의 나라예요. 숲과 호수가 아주 많아요.|
+208|덴마크|코펜하겐||2|EU|dk|레고와 안데르센 동화의 나라예요. 세계에서 행복한 나라로 자주 꼽혀요.|
+246|핀란드|헬싱키||2|EU|fi|'호수와 숲의 나라'예요. 사우나, 산타클로스 마을, 무민으로 유명해요.|
+352|아이슬란드|레이캬비크||3|EU|is|화산과 빙하가 함께 있는 '불과 얼음의 나라'예요. 오로라와 온천이 유명해요.|
+233|에스토니아|탈린||3|EU|ee|발트 3국 중 하나예요. 인터넷 투표를 처음 도입한 IT 강국이에요.|
+428|라트비아|리가||3|EU|lv|발트 3국 중 가운데 나라예요. 국토의 절반이 숲이에요.|
+440|리투아니아|빌뉴스||3|EU|lt|발트 3국 중 가장 남쪽 나라예요. 온 국민이 농구를 아주 사랑해요.|
+616|폴란드|바르샤바||2|EU|pl|중부 유럽의 큰 나라예요. 음악가 쇼팽과 과학자 마리 퀴리의 고향이에요.|
+203|체코|프라하||2|EU|cz|동화 같은 성과 붉은 지붕이 아름다운 나라예요. 마리오네트 인형극이 유명해요.|
+703|슬로바키아|브라티슬라바||3|EU|sk|1993년 체코와 평화롭게 나뉜 나라예요. 인구에 비해 자동차를 아주 많이 만들어요.|
+348|헝가리|부다페스트||2|EU|hu|도나우강이 흐르는 나라예요. 온천과 고추 요리 '굴라시'가 유명해요.|도나우강 양쪽의 '부다'와 '페스트'가 합쳐진 도시예요.
+642|루마니아|부쿠레슈티|부카레스트|3|EU|ro|드라큘라 전설의 무대 '트란실바니아'가 있는 나라예요. 카르파티아산맥이 둘러싸고 있어요.|
+100|불가리아|소피아||3|EU|bg|요구르트의 나라예요. 향수 원료인 장미 기름을 세계에서 가장 많이 만들어요.|
+300|그리스|아테네||1|EU|gr|민주주의와 올림픽이 시작된 나라예요. 파르테논 신전과 그리스 신화로 유명해요.|
+008|알바니아|티라나||3|EU|al|발칸반도 아드리아해 연안의 나라예요. 국기에 머리가 둘인 검은 독수리가 있어요.|
+807|북마케도니아|스코페||3|EU|mk|발칸반도의 바다 없는 나라예요. 마더 테레사가 태어난 곳이에요.|
+688|세르비아|베오그라드||3|EU|rs|발칸반도 한가운데의 나라예요. 테니스 선수 조코비치의 나라예요.|'하얀 도시'라는 뜻이에요.
+499|몬테네그로|포드고리차||3|EU|me|'검은 산'이라는 뜻의 이름을 가진 아드리아해의 작은 나라예요.|
+070|보스니아 헤르체고비나|사라예보||3|EU|ba|발칸반도의 나라로, 제1차 세계 대전의 계기가 된 사건이 일어난 곳이에요.|
+191|크로아티아|자그레브||2|EU|hr|아드리아해를 따라 긴 해안을 가진 나라예요. 넥타이가 이 나라에서 시작됐어요.|
+705|슬로베니아|류블랴나||3|EU|si|알프스와 바다를 모두 가진 작은 나라예요. 블레드 호수 섬 위의 작은 교회가 유명해요.|
+498|몰도바|키시나우|키시네프|3|EU|md|루마니아와 우크라이나 사이의 바다 없는 나라예요. 거대한 지하 와인 저장고가 있어요.|
+804|우크라이나|키이우|키예프|2|EU|ua|유럽에서 러시아 다음으로 넓은 나라예요. 땅이 기름져 '유럽의 빵 바구니'라 불려요.|키이우는 우크라이나어, 키예프는 러시아어식 이름이에요.
+112|벨라루스|민스크||3|EU|by|'하얀 러시아'라는 뜻의 나라예요. 숲과 늪이 많고 유럽들소가 살아요.|
+643|러시아|모스크바||1|EU|ru|세계에서 가장 넓은 나라로, 시간대가 11개나 돼요. 시베리아 횡단 열차가 유명해요.|
+196|키프로스|니코시아||3|EU|cy|지중해 동쪽의 섬나라예요. 그리스 신화 속 아프로디테가 태어난 섬이라고 해요.|
+XK|코소보|프리슈티나||3|EU|xk|2008년에 세르비아로부터 독립을 선언한 발칸반도의 나라예요. 젊은 인구가 많아요.|
+818|이집트|카이로||1|AF|eg|피라미드와 스핑크스, 나일강의 나라예요. 수천 년 전 고대 문명이 꽃폈어요.|
+434|리비아|트리폴리||3|AF|ly|국토의 90% 이상이 사하라 사막인 북아프리카 나라예요. 석유가 풍부해요.|
+788|튀니지|튀니스||3|AF|tn|아프리카 북쪽 끝의 나라예요. 고대 도시 카르타고의 유적이 있어요.|
+012|알제리|알제||3|AF|dz|아프리카에서 가장 넓은 나라예요. 국토 대부분이 사하라 사막이에요.|
+504|모로코|라바트||2|AF|ma|유럽과 가장 가까운 아프리카 북서쪽 나라예요. 온통 파란 마을 '셰프샤우엔'이 유명해요.|가장 큰 도시 카사블랑카는 수도가 아니에요!
+478|모리타니|누악쇼트||3|AF|mr|사하라 사막 서쪽의 나라예요. 세계에서 가장 긴 화물 열차가 다녀요.|
+466|말리|바마코||3|AF|ml|서아프리카 내륙의 나라예요. 진흙으로 지은 사원의 도시 '팀북투'가 있어요.|
+562|니제르|니아메||3|AF|ne|니제르강에서 이름을 딴 사하라 남쪽의 나라예요. 국토 대부분이 사막이에요.|
+148|차드|은자메나|엔자메나|3|AF|td|아프리카 한가운데의 바다 없는 나라예요. 나라 이름이 된 차드호가 점점 줄어들고 있어요.|
+729|수단|하르툼||3|AF|sd|이집트보다 피라미드가 더 많은 나라예요! 청나일강과 백나일강이 만나요.|
+728|남수단|주바||3|AF|ss|2011년에 수단에서 독립한, 세계에서 가장 최근에 생긴 나라 중 하나예요.|
+231|에티오피아|아디스아바바|아디스아베바|2|AF|et|커피가 처음 발견된 곳으로 알려진 나라예요. 6·25 전쟁 때 우리나라를 도우러 왔어요.|'새로운 꽃'이라는 뜻이고, 아프리카연합(AU) 본부가 있어요.
+232|에리트레아|아스마라||3|AF|er|홍해 연안의 나라예요. 이탈리아 식민지 시절의 건물이 많이 남아 있어요.|
+262|지부티|지부티|지부티시|1|AF|dj|홍해 입구에 있는 작은 나라예요. 여러 나라의 배가 오가는 중요한 항구가 있어요.|
+706|소말리아|모가디슈||3|AF|so|'아프리카의 뿔' 끝에 있는 나라로, 아프리카 대륙에서 해안선이 가장 길어요.|
+404|케냐|나이로비||2|AF|ke|사파리와 마라톤 선수들로 유명한 동아프리카 나라예요. 적도가 지나가요.|
+800|우간다|캄팔라||3|AF|ug|'아프리카의 진주'라 불려요. 나일강이 시작되는 빅토리아 호수가 있어요.|
+646|르완다|키갈리||3|AF|rw|'천 개의 언덕의 나라'예요. 산고릴라가 살고 거리가 아주 깨끗해요.|
+108|부룬디|기테가||3|AF|bi|탕가니카 호수 옆의 작은 나라예요. 아프리카에서 가장 작은 나라 중 하나예요.|2019년에 부줌부라에서 기테가로 수도를 옮겼어요.
+834|탄자니아|도도마||3|AF|tz|아프리카에서 가장 높은 킬리만자로산과 세렝게티 국립공원이 있어요.|가장 큰 도시 다르에스살람에서 도도마로 수도를 옮겼어요.
+686|세네갈|다카르||3|AF|sn|아프리카 대륙에서 가장 서쪽 나라예요. 분홍빛 호수 '레트바'가 있어요.|
+270|감비아|반줄||3|AF|gm|아프리카 본토에서 가장 작은 나라예요. 감비아강을 따라 길쭉하게 생겼어요.|
+624|기니비사우|비사우||3|AF|gw|대서양 연안의 작은 나라로, 비자고스 제도의 섬들이 있어요. 캐슈너트를 많이 키워요.|
+324|기니|코나크리||3|AF|gn|서아프리카 대서양 연안의 나라예요. 알루미늄 원료인 보크사이트가 많이 나요.|
+694|시에라리온|프리타운||3|AF|sl|'사자의 산'이라는 뜻의 이름을 가진 나라예요. 다이아몬드가 나요.|'자유의 도시'라는 뜻으로, 해방된 노예들이 세운 도시예요.
+430|라이베리아|몬로비아||3|AF|lr|미국에서 돌아온 해방 노예들이 세운 나라예요. 아프리카에서 가장 오래된 공화국이에요.|미국 대통령 먼로의 이름을 땄어요.
+384|코트디부아르|야무수크로||3|AF|ci|'상아 해안'이라는 뜻이에요. 초콜릿 원료 카카오를 세계에서 가장 많이 생산해요.|공식 수도는 야무수크로, 경제 중심지는 아비장이에요.
+288|가나|아크라||2|AF|gh|카카오를 많이 생산하는 나라예요. 사하라 남쪽에서 가장 먼저 독립한 나라 중 하나예요.|
+768|토고|로메||3|AF|tg|가나와 베냉 사이의 길쭉하고 작은 나라예요. 전통 신앙 문화가 남아 있어요.|
+204|베냉|포르토노보|코토누|3|AF|bj|옛 다호메이 왕국의 나라예요. 용감한 여성 전사 부대로 유명했어요.|공식 수도는 포르토노보지만, 정부 기관 상당수는 코토누에 있어요.
+854|부르키나파소|와가두구||3|AF|bf|'정직한 사람들의 나라'라는 뜻이에요. 아프리카 최대의 영화제가 열려요.|
+566|나이지리아|아부자||2|AF|ng|아프리카에서 인구가 가장 많은 나라예요. 영화 산업 '놀리우드'가 유명해요.|1991년에 가장 큰 도시 라고스에서 아부자로 수도를 옮겼어요.
+120|카메룬|야운데||3|AF|cm|사막·밀림·화산·해변이 다 있어 '아프리카의 축소판'이라 불려요. 축구를 아주 잘해요.|
+140|중앙아프리카공화국|방기||3|AF|cf|이름 그대로 아프리카 대륙 한가운데 있는 바다 없는 나라예요.|
+226|적도기니|말라보|시우다드데라파스|3|AF|gq|섬과 대륙 땅으로 이루어진 나라예요. 아프리카에서 유일하게 스페인어가 공용어예요.|섬에 있는 말라보에서 대륙의 새 계획도시 '시우다드데라파스'로 수도를 옮기고 있어요. 둘 다 정답!
+266|가봉|리브르빌||3|AF|ga|국토의 약 85%가 열대 우림이에요. 숲코끼리와 고릴라가 살아요.|'자유의 마을'이라는 뜻이에요.
+178|콩고 공화국|브라자빌||3|AF|cg|콩고강 서쪽의 나라예요. 강 건너편에 이웃 나라 콩고민주공화국의 수도가 보여요.|
+180|콩고민주공화국|킨샤사||3|AF|cd|아프리카에서 두 번째로 넓은 나라예요. 세계에서 가장 깊은 강인 콩고강이 흘러요.|
+024|앙골라|루안다||3|AF|ao|포르투갈어를 쓰는 아프리카 남서부 나라예요. 석유와 다이아몬드가 풍부해요.|
+894|잠비아|루사카||3|AF|zm|세계 3대 폭포 중 하나인 빅토리아 폭포가 있어요. 구리가 많이 나요.|
+454|말라위|릴롱궤||3|AF|mw|'아프리카의 따뜻한 심장'이라 불려요. 길쭉한 말라위 호수에 알록달록 물고기가 살아요.|
+508|모잠비크|마푸투||3|AF|mz|인도양을 따라 길게 뻗은 나라예요. 국기에 소총이 그려져 있어요.|
+716|짐바브웨|하라레||3|AF|zw|'돌로 지은 집'이라는 뜻이에요. 거대한 석조 유적 '그레이트 짐바브웨'가 있어요.|
+072|보츠와나|가보로네||3|AF|bw|칼라하리 사막과 오카방고 삼각주가 있는 나라예요. 코끼리가 세계에서 가장 많이 살아요.|
+516|나미비아|빈트후크||3|AF|na|세계에서 가장 오래된 사막 중 하나인 나미브 사막의 붉은 모래 언덕이 있어요.|
+710|남아프리카 공화국|프리토리아|케이프타운,블룸폰테인|2|AF|za|아프리카 최남단의 나라예요. 넬슨 만델라의 나라이고, 수도가 무려 3개예요!|행정 수도 프리토리아, 입법 수도 케이프타운, 사법 수도 블룸폰테인. 셋 다 정답!
+426|레소토|마세루||3|AF|ls|남아공에 완전히 둘러싸인 산악 왕국이에요. 국토 전체가 해발 1,000m보다 높아요.|
+748|에스와티니|음바바네|로밤바|3|AF|sz|아프리카에 남은 몇 안 되는 절대 왕정 국가예요. 2018년에 '스와질란드'에서 이름을 바꿨어요.|행정 수도는 음바바네, 왕실과 국회가 있는 수도는 로밤바예요.
+450|마다가스카르|안타나나리보||3|AF|mg|세계에서 4번째로 큰 섬이에요. 여우원숭이와 바오밥나무로 유명해요.|'천 명의 전사의 도시'라는 뜻이에요.
+480|모리셔스|포트루이스||3|AF|mu|인도양의 아름다운 섬나라예요. 멸종된 새 '도도'가 살던 곳이에요.|
+690|세이셸|빅토리아||3|AF|sc|인도양의 115개 섬으로 이루어진 나라예요. 아프리카에서 인구가 가장 적어요.|
+174|코모로|모로니||3|AF|km|모잠비크와 마다가스카르 사이의 화산섬 나라예요. 향료 '일랑일랑'과 바닐라가 유명해요.|
+132|카보베르데|프라이아||3|AF|cv|대서양에 떠 있는 화산섬 나라예요. 포르투갈어를 쓰고 '모르나' 음악이 유명해요.|
+678|상투메 프린시페|상투메||2|AF|st|적도 근처 기니만의 섬나라예요. 아프리카에서 두 번째로 작은 나라예요.|
+840|미국|워싱턴 D.C.|워싱턴,워싱턴DC,워싱턴디씨|1|NA|us|50개 주로 이루어진 나라예요. 자유의 여신상, 할리우드, NASA로 유명해요.|가장 큰 도시 뉴욕은 수도가 아니에요! 정식 이름은 '워싱턴 컬럼비아 특별구'예요.
+124|캐나다|오타와||1|NA|ca|세계에서 두 번째로 넓은 나라예요. 국기에 단풍잎이 있고 메이플 시럽이 유명해요.|토론토나 밴쿠버가 아니라 오타와가 수도예요.
+484|멕시코|멕시코시티|멕시코|1|NA|mx|고대 마야·아스테카 문명의 나라예요. 타코와 해골 축제 '죽은 자의 날'이 유명해요.|
+320|과테말라|과테말라시티|과테말라|1|NA|gt|마야 문명의 피라미드 유적 '티칼'이 있어요. 화산이 많고 커피가 유명해요.|
+084|벨리즈|벨모판||3|NA|bz|중앙아메리카에서 유일하게 영어가 공용어인 나라예요. 바닷속 거대한 구멍 '그레이트 블루홀'이 유명해요.|
+222|엘살바도르|산살바도르||3|NA|sv|중앙아메리카에서 가장 작은 나라예요. 세계 최초로 비트코인을 법정 화폐로 채택했던 나라예요.|
+340|온두라스|테구시갈파||3|NA|hn|마야 유적 '코판'이 있는 나라예요. 바나나를 많이 수출해요.|
+558|니카라과|마나과||3|NA|ni|중앙아메리카에서 가장 넓은 나라예요. 큰 호수 안에 화산섬이 있어요.|
+188|코스타리카|산호세||3|NA|cr|군대를 없앤 평화의 나라예요. 자연이 풍부해 나무늘보와 화려한 새가 많아요.|
+591|파나마|파나마시티|파나마|1|NA|pa|대서양과 태평양을 잇는 '파나마 운하'가 있어요.|
+192|쿠바|아바나||2|NA|cu|카리브해에서 가장 큰 섬나라예요. 오래된 클래식 자동차와 살사 음악으로 유명해요.|
+388|자메이카|킹스턴||3|NA|jm|레게 음악의 밥 말리, 육상 선수 우사인 볼트의 나라예요.|
+332|아이티|포르토프랭스||3|NA|ht|1804년, 노예들이 혁명으로 세운 세계 최초의 흑인 공화국이에요.|
+214|도미니카 공화국|산토도밍고||3|NA|do|아이티와 한 섬을 나눠 쓰는 나라예요. 메이저리그 야구 선수를 많이 배출해요.|
+044|바하마|나소||3|NA|bs|700개가 넘는 섬으로 이루어진 나라예요. '수영하는 돼지 섬'이 유명해요.|
+052|바베이도스|브리지타운||3|NA|bb|카리브해 동쪽 끝의 섬나라예요. 가수 리아나의 고향이에요.|
+780|트리니다드 토바고|포트오브스페인||3|NA|tt|드럼통으로 만든 악기 '스틸팬'이 태어난 나라예요. 카니발 축제가 유명해요.|
+028|앤티가 바부다|세인트존스||3|NA|ag|1년 365일 매일 다른 해변에 갈 수 있다고 할 만큼 해변이 많은 섬나라예요.|
+212|도미니카 연방|로조||3|NA|dm|'카리브해의 자연 섬'이에요. 물이 끓어오르는 호수 '보일링 레이크'가 있어요.|
+308|그레나다|세인트조지스||3|NA|gd|'향신료 섬'이라 불려요. 국기에 향신료 육두구 열매가 그려져 있어요.|
+659|세인트키츠 네비스|바스테르|바세테르|3|NA|kn|아메리카 대륙에서 가장 작은 나라예요. 두 개의 섬으로 이루어져 있어요.|
+662|세인트루시아|캐스트리스||3|NA|lc|바다에서 솟은 두 봉우리 '피통즈'가 유명한 화산섬 나라예요.|
+670|세인트빈센트 그레나딘|킹스타운||3|NA|vc|영화 '캐리비안의 해적' 촬영지로 유명한 섬나라예요.|
+304|그린란드|누크||3|NA|gl|세계에서 가장 큰 섬으로, 덴마크의 자치령이에요. 섬의 80%가 두꺼운 얼음으로 덮여 있어요.|그린란드는 독립 국가가 아니라 덴마크에 속한 자치 지역이에요.
+076|브라질|브라질리아||1|SA|br|남아메리카에서 가장 넓은 나라예요. 아마존 열대 우림, 축구, 삼바 축제로 유명해요.|1960년에 리우데자네이루에서 새로 만든 계획도시 브라질리아로 수도를 옮겼어요.
+032|아르헨티나|부에노스아이레스||1|SA|ar|탱고와 축구 스타 메시의 나라예요. 남쪽 끝 파타고니아에는 거대한 빙하가 있어요.|'좋은 공기'라는 뜻이에요.
+152|칠레|산티아고||2|SA|cl|남북 길이가 4,300km나 되는 세상에서 가장 길쭉한 나라예요. 모아이 석상이 있는 이스터섬도 칠레 땅이에요.|
+604|페루|리마||2|SA|pe|잉카 제국의 공중 도시 '마추픽추'가 있어요. 감자의 고향이에요.|
+170|콜롬비아|보고타|산타페데보고타|2|SA|co|커피와 에메랄드로 유명해요. 6·25 전쟁 때 중남미에서 유일하게 군대를 보내 우리나라를 도왔어요.|
+862|베네수엘라|카라카스||2|SA|ve|세계에서 가장 높은 폭포 '앙헬 폭포'가 있어요. 석유가 세계에서 가장 많이 묻혀 있어요.|
+218|에콰도르|키토||3|SA|ec|나라 이름이 스페인어로 '적도'라는 뜻이에요. 진화론의 고향 갈라파고스 제도가 있어요.|
+068|볼리비아|수크레|라파스|3|SA|bo|세계에서 가장 큰 소금 사막 '우유니'가 있어요. 수도가 두 곳이라고 할 수 있는 나라예요.|헌법상 수도는 수크레, 정부와 국회는 라파스에 있어요. 라파스도 정답!
+600|파라과이|아순시온||3|SA|py|남아메리카의 바다 없는 나라예요. 거대한 이타이푸 댐을 브라질과 함께 운영해요.|
+858|우루과이|몬테비데오||3|SA|uy|1930년 첫 번째 월드컵을 열고 우승까지 한 나라예요.|
+328|가이아나|조지타운||3|SA|gy|남아메리카에서 유일하게 영어가 공용어인 나라예요. 거대한 카이에투르 폭포가 있어요.|
+740|수리남|파라마리보||3|SA|sr|남아메리카에서 가장 작은 나라예요. 네덜란드어를 공용어로 써요.|
+036|오스트레일리아|캔버라||1|OC|au|'호주'라고도 불러요. 한 대륙 전체가 한 나라이고, 캥거루와 코알라가 살아요.|시드니와 멜버른이 서로 수도가 되려고 다투자, 그 사이에 새로 만든 도시가 캔버라예요.
+554|뉴질랜드|웰링턴||2|OC|nz|남섬과 북섬으로 이루어진 나라예요. 키위새와 원주민 마오리 문화, 영화 '반지의 제왕' 촬영지로 유명해요.|가장 큰 도시 오클랜드는 수도가 아니에요!
+598|파푸아뉴기니|포트모르즈비|포트모레스비|3|OC|pg|800개가 넘는 언어가 쓰이는 나라예요. 국기에 아름다운 새 '극락조'가 그려져 있어요.|
+242|피지|수바||3|OC|fj|330여 개의 섬으로 이루어진 남태평양 나라예요. 럭비를 아주 잘해요.|
+090|솔로몬 제도|호니아라||3|OC|sb|제2차 세계 대전의 격전지 과달카날섬이 있는 나라예요.|
+548|바누아투|포트빌라||3|OC|vu|번지점프의 원조인 '땅 다이빙' 풍습이 있어요. 활화산을 가까이서 볼 수 있어요.|
+882|사모아|아피아||3|OC|ws|날짜 변경선 바로 옆의 나라로, 2011년에 하루를 통째로 건너뛰어 날짜를 바꿨어요.|
+776|통가|누쿠알로파||3|OC|to|태평양에 남은 유일한 왕국이에요. 한 번도 식민지가 된 적이 없어요.|
+798|투발루|푸나푸티||3|OC|tv|바닷물이 높아져 가라앉을 위기에 처한 작은 섬나라예요. 인터넷 주소 '.tv'를 팔아 돈을 벌어요.|
+520|나우루|야렌||3|OC|nr|세계에서 가장 작은 섬나라예요. 섬 한 바퀴가 20km도 안 돼요.|공식 수도가 없어서, 정부 기관이 있는 야렌을 사실상의 수도로 봐요.
+296|키리바시|타라와|남타라와|3|OC|ki|세계에서 가장 먼저 새해를 맞는 나라예요. 33개의 산호섬이 넓은 바다에 흩어져 있어요.|
+584|마셜 제도|마주로||3|OC|mh|산호초 섬들로 이루어진 나라예요. 비키니 수영복의 이름이 된 '비키니 환초'가 있어요.|
+583|미크로네시아 연방|팔리키르||3|OC|fm|600개가 넘는 섬으로 이루어진 나라예요. 사람 키보다 큰 돌로 만든 돈 '라이'로 유명해요.|
+585|팔라우|응게룰무드||3|OC|pw|쏘지 않는 해파리가 사는 호수가 있는 섬나라예요. 다이빙 명소로 유명해요.|2006년에 코로르에서 응게룰무드로 수도를 옮겼어요.
+`;
+
+const CONT = { AS:'아시아', EU:'유럽', AF:'아프리카', NA:'북아메리카', SA:'남아메리카', OC:'오세아니아' };
+const CONT_COLOR = { AS:'#f6d59e', EU:'#bcd5f3', AF:'#f2bd97', NA:'#c4e3b7', SA:'#e3c6e6', OC:'#b2e2dd' };
+const CONT_BOX ={ AS:[[25,-11],[150,56]], EU:[[-25,34],[45,71]], AF:[[-20,-36],[55,38]], NA:[[-170,6],[-50,75]], SA:[[-85,-56],[-33,13]], OC:[[110,-48],[180,8]] };
+const TIER = { 1:{label:'★ 유명한 나라', base:10, bonus:0}, 2:{label:'★★ 보통 나라', base:10, bonus:10}, 3:{label:'★★★ 숨은 나라', base:10, bonus:20} };
+const HINT_RATE = [1, 0.7, 0.5, 0.3];
+const RANKS = [[0,'🧭 견습 탐험가'],[10,'🎒 꼬마 여행자'],[30,'⛵ 용감한 항해사'],[60,'🗺️ 지도 박사'],[100,'🤝 세계 외교관'],[150,'👑 수도 정복왕']];
+
+const C = {};
+RAW.trim().split('\n').forEach(l => {
+  const [id,name,cap,alts,tier,cont,a2,intro,note] = l.split('|');
+  C[id] = { id, name, cap, alts: alts ? alts.split(',') : [], tier:+tier, cont, a2, intro, note: note || '' };
+});
+
+// ---------- 저장 ----------
+const KEY = 'capitalQuest_v1';
+let S = { score:0, conq:{}, fail:{}, found:{}, findScore:0, streak:0, best:0 };
+try { const s = JSON.parse(localStorage.getItem(KEY)); if (s) S = Object.assign(S, s); } catch(e) {}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} }
+
+// ---------- 도우미 ----------
+const $ = id => document.getElementById(id);
+const norm = s => s.replace(/[\s.\-·,'"()]/g,'').toLowerCase();
+const CHO = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+const chosung = s => [...s].map(ch => { const c = ch.charCodeAt(0) - 0xAC00; return (c >= 0 && c < 11172) ? CHO[Math.floor(c/588)] : ch; }).join('');
+const josa = (w, a, b) => { const c = w.charCodeAt(w.length-1) - 0xAC00; return (c >= 0 && c < 11172 && c % 28) ? a : b; };
+const shuffle = a => { for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const flagUrl = a2 => `https://flagcdn.com/w160/${a2}.png`;
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// ---------- 소리 ----------
+let AC;
+function beep(notes) {
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    let t = AC.currentTime;
+    notes.forEach(([f,d]) => { const o = AC.createOscillator(), g = AC.createGain(); o.type='triangle'; o.frequency.value=f; g.gain.setValueAtTime(.18,t); g.gain.exponentialRampToValueAtTime(.001,t+d); o.connect(g).connect(AC.destination); o.start(t); o.stop(t+d); t += d*.8; });
+  } catch(e) {}
+}
+const sOK = () => beep([[660,.12],[880,.12],[1175,.25]]);
+const sNO = () => beep([[300,.18],[220,.3]]);
+
+// ---------- 지도 ----------
+const W = 960, H = 500;
+const svg = d3.select('#map'), root = svg.append('g'), gC = root.append('g'), gM = root.append('g');
+let projection, path, features = [], byKey = {}, K = 1;
+let mode = 'cap', sel = null, game = null, findQ = null;
+
+const zoom = d3.zoom().scaleExtent([1, 60]).translateExtent([[-50,-50],[W+50,H+50]]).clickDistance(5)
+  .on('zoom', e => { root.attr('transform', e.transform); K = e.transform.k; gM.selectAll('circle').attr('r', 4.5 / K); });
+svg.call(zoom).on('dblclick.zoom', null);
+
+function mainPart(f) {
+  if (f.geometry.type !== 'MultiPolygon') return f;
+  let best = null, ba = -1;
+  f.geometry.coordinates.forEach(c => { const p = { type:'Feature', geometry:{ type:'Polygon', coordinates:c } }; const a = d3.geoArea(p); if (a > ba) { ba = a; best = p; } });
+  return best;
+}
+
+fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json').then(r => r.json()).then(topo => {
+  features = topojson.feature(topo, topo.objects.countries).features.filter(f => f.id !== '010');
+  features.forEach(f => {
+    f.key = C[f.id] ? f.id : (f.properties.name === 'Kosovo' ? 'XK' : null);
+    if (f.key && byKey[f.key]) f.key = null; // 중복 방지
+    if (f.key) byKey[f.key] = f;
+  });
+  projection = d3.geoNaturalEarth1().fitExtent([[6,6],[W-6,H-6]], { type:'FeatureCollection', features });
+  path = d3.geoPath(projection);
+
+  gC.selectAll('path').data(features).join('path')
+    .attr('d', path)
+    .on('click', (e, d) => d.key && onPick(d.key, e))
+    .on('mousemove', (e, d) => showTip(e, d.key))
+    .on('mouseleave', hideTip);
+
+  // 지도 자료에 모양이 없는 아주 작은 나라는 점으로만 표시
+  const EXTRA = { '798':[179.2,-8.52] };
+  const extra = Object.entries(EXTRA).filter(([k]) => !byKey[k]).map(([k,xy]) => { const f = { type:'Feature', id:k, key:k, geometry:{ type:'Point', coordinates:xy } }; byKey[k] = f; return f; });
+  const small = features.filter(f => f.key && path.area(f) < 22).concat(extra);
+  gM.selectAll('circle').data(small).join('circle')
+    .attr('class', 'mk')
+    .attr('cx', d => path.centroid(mainPart(d))[0]).attr('cy', d => path.centroid(mainPart(d))[1]).attr('r', 4.5)
+    .on('click', (e, d) => onPick(d.key, e))
+    .on('mousemove', (e, d) => showTip(e, d.key))
+    .on('mouseleave', hideTip);
+
+  $('loading').remove();
+  $('tot').textContent = keys().length;
+  paint(); hud(); renderPanel();
+}).catch(() => { $('loading').textContent = '😢 지도를 불러오지 못했어요. 인터넷 연결을 확인하고 새로고침 해 주세요.'; });
+
+const keys = () => Object.keys(byKey);
+
+function status(k) {
+  if (mode === 'cap') return S.conq[k] != null ? 'win' : S.fail[k] ? 'fail' : 'k-' + C[k].cont;
+  return S.found[k] ? 'win' : 'k-plain';
+}
+function paint() {
+  gC.selectAll('path').attr('class', d => !d.key ? 'nodata' : 'c ' + status(d.key) + (sel === d.key ? ' sel' : ''));
+  gM.selectAll('circle').attr('class', d => 'mk ' + status(d.key) + (sel === d.key ? ' sel' : ''))
+    .style('fill', d => { const st = status(d.key); return st === 'win' ? '#ffb300' : st === 'fail' ? '#ef6b61' : '#ff7a59'; });
+  gC.selectAll('path.sel').raise();
+}
+
+const tip = $('tip');
+function showTip(e, k) {
+  if (!k) { hideTip(); return; }
+  const showName = mode === 'cap' || S.found[k];
+  if (!showName) { hideTip(); return; }
+  const r = $('mapbox').getBoundingClientRect();
+  let t = C[k].name;
+  if (mode === 'cap' && S.conq[k] != null) t += ' · ' + C[k].cap + ' ✅';
+  if (mode === 'cap' && S.fail[k]) t += ' · ' + C[k].cap;
+  tip.textContent = t; tip.style.display = 'block';
+  tip.style.left = (e.clientX - r.left) + 'px'; tip.style.top = (e.clientY - r.top) + 'px';
+}
+function hideTip() { tip.style.display = 'none'; }
+
+function projBox(box) {
+  const [[a,b],[c,d]] = box, pts = [];
+  for (let i=0;i<=8;i++) for (let j=0;j<=8;j++) pts.push(projection([a+(c-a)*i/8, b+(d-b)*j/8]));
+  return [[d3.min(pts,p=>p[0]), d3.min(pts,p=>p[1])], [d3.max(pts,p=>p[0]), d3.max(pts,p=>p[1])]];
+}
+function zoomToBounds([[x0,y0],[x1,y1]], maxK = 12) {
+  const k = Math.max(1, Math.min(maxK, 0.85 / Math.max((x1-x0)/W, (y1-y0)/H)));
+  svg.transition().duration(800).call(zoom.transform, d3.zoomIdentity.translate(W/2,H/2).scale(k).translate(-(x0+x1)/2, -(y0+y1)/2));
+}
+function zoomCont(c) { if (!projection) return; c === 'ALL' ? svg.transition().duration(700).call(zoom.transform, d3.zoomIdentity) : zoomToBounds(projBox(CONT_BOX[c]), 8); }
+function zoomCountry(k, maxK = 7) { const f = byKey[k]; if (f) zoomToBounds(path.bounds(mainPart(f)), maxK); }
+function zoomBy(f) { svg.transition().duration(300).call(zoom.scaleBy, f); }
+
+$('conts').innerHTML = Object.entries(CONT).map(([c,n]) => `<button onclick="zoomCont('${c}')">${n}</button>`).join('');
+
+// ---------- 화면 상단 ----------
+function hud() {
+  const n = keys().length;
+  if (mode === 'cap') {
+    const won = Object.keys(S.conq).length;
+    $('score').textContent = S.score;
+    $('countPill').innerHTML = `정복 <b>${won}</b>/${n}`;
+    let r = RANKS[0][1]; RANKS.forEach(([m,t]) => { if (won >= m) r = t; });
+    if (won === n) r = '🌏 세계 정복자';
+    $('rank').textContent = r;
+  } else {
+    $('score').textContent = S.findScore;
+    $('countPill').innerHTML = `찾음 <b>${Object.keys(S.found).length}</b>/${n}`;
+    $('rank').textContent = '📍 위치 탐정';
+  }
+  $('streak').textContent = S.streak;
+  $('legend').innerHTML = mode === 'cap'
+    ? Object.entries(CONT).map(([c,n]) => `<span><i style="background:${CONT_COLOR[c]}"></i>${n}</span>`).join('') + '<span><i style="background:#ffc83a"></i>정복 완료</span><span><i style="background:#f39a92"></i>아쉽게 놓침</span><span><i style="background:#ff7a59;border-radius:50%"></i>작은 나라(점을 눌러요)</span>'
+    : '<span><i style="background:#cfd8e2"></i>아직 못 찾음</span><span><i style="background:#ffc83a"></i>찾은 나라</span><span><i style="background:#ff7a59;border-radius:50%"></i>작은 나라(점을 눌러요)</span>';
+}
+
+function progressHTML() {
+  const tot = {}, got = {};
+  keys().forEach(k => { const c = C[k].cont; tot[c] = (tot[c]||0)+1; if (mode === 'cap' ? S.conq[k] != null : S.found[k]) got[c] = (got[c]||0)+1; });
+  return `<div class="prog"><h3>대륙별 ${mode === 'cap' ? '정복' : '찾기'} 현황</h3>` + Object.entries(CONT).map(([c,n]) => {
+    const g = got[c]||0, t = tot[c]||1;
+    return `<div class="bar"><span>${n}</span><div class="tr"><div class="fi" style="width:${g/t*100}%"></div></div><span>${g}/${t}</span></div>`;
+  }).join('') + `</div>`;
+}
+
+function popAt(e, text) {
+  const d = document.createElement('div'); d.className = 'pop'; d.textContent = text;
+  const x = e && e.clientX ? e.clientX : innerWidth/2, y = e && e.clientY ? e.clientY : innerHeight/2;
+  d.style.left = x + 'px'; d.style.top = (y - 20) + 'px';
+  document.body.appendChild(d); setTimeout(() => d.remove(), 1300);
+}
+
+// ---------- 모드 ----------
+function setMode(m) {
+  mode = m; sel = null; game = null; findQ = null;
+  $('tabCap').classList.toggle('on', m === 'cap'); $('tabFind').classList.toggle('on', m === 'find');
+  gC.selectAll('path').classed('target', false);
+  paint(); hud(); renderPanel();
+}
+
+function onPick(k, e) {
+  hideTip();
+  if (mode === 'find') return findClick(k, e);
+  sel = k; paint();
+  const done = S.conq[k] != null || S.fail[k];
+  game = done ? null : { k, hint:0, wrong:0, choices:null, last:'' };
+  renderPanel();
+  if (!done && innerWidth > 900) setTimeout(() => { const a = $('ans'); a && a.focus(); }, 30);
+  if (innerWidth <= 900) $('panel').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function randomCountry() {
+  const left = keys().filter(k => S.conq[k] == null && !S.fail[k]);
+  if (!left.length) return finishModal();
+  const k = left[Math.floor(Math.random()*left.length)];
+  zoomCountry(k, 5); onPick(k);
+}
+
+// ---------- 패널: 수도 맞히기 ----------
+function renderPanel() {
+  const P = $('panel');
+  if (mode === 'find') return renderFind();
+  if (!sel) {
+    P.innerHTML = `<div class="welcome">
+      <h2>🗺️ 세계를 정복하라!</h2>
+      <p>지도에서 <b>나라를 하나 클릭</b>하면 그 나라 소개가 나와요. 소개를 읽고 <b>수도</b>를 맞히면 그 나라를 정복해요!</p>
+      <ul>
+        <li>★ 유명한 나라 <b>10점</b> · ★★ 보통 나라 <b>20점</b> · ★★★ 숨은 나라 <b>30점</b> (가산점!)</li>
+        <li>💡 힌트: 첫 글자 → 초성 → 보기 4개 (쓸수록 점수가 줄어요)</li>
+        <li>기회는 3번! 3번 연속 맞히면 🔥 <b>연속 보너스 +5점</b></li>
+        <li>작은 나라는 <span style="color:#ff7a59">●</span> 점을 누르세요. 마우스 휠·손가락으로 확대할 수 있어요.</li>
+      </ul>
+      <div class="actions"><button class="btn primary" onclick="randomCountry()">🎲 아무 나라나 골라줘</button></div>
+    </div>` + progressHTML();
+    return;
+  }
+  const c = C[sel], t = TIER[c.tier];
+  let h = `<div class="chead"><img class="flag" src="${flagUrl(c.a2)}" alt="${esc(c.name)} 국기" onerror="this.style.visibility='hidden'">
+    <div><div class="cname">${esc(c.name)}</div><div class="badges"><span class="badge">${CONT[c.cont]}</span><span class="badge t${c.tier}">${t.label}${t.bonus ? ' +' + t.bonus : ''}</span></div></div></div>
+    <div class="intro">${esc(c.intro)}</div>`;
+
+  if (S.conq[sel] != null || S.fail[sel]) {
+    const won = S.conq[sel] != null;
+    h += `<div class="msg ${won ? 'ok' : 'no'}"><span class="big">🏛️ 수도: ${esc(c.cap)}</span>${won ? `이미 정복한 나라예요! (+${S.conq[sel]}점)` : '지난번에 아쉽게 놓친 나라예요. 이번엔 꼭 기억해요!'}</div>`;
+    if (c.note) h += `<div class="note">💬 ${esc(c.note)}</div>`;
+    h += `<div class="actions"><button class="btn primary" onclick="randomCountry()">🎲 다음 나라</button><button class="btn ghost" onclick="zoomCountry('${sel}')">🔍 위치 확대</button></div>`;
+    P.innerHTML = h + progressHTML();
+    return;
+  }
+
+  const g = game, possible = Math.max(1, Math.round((t.base + t.bonus) * HINT_RATE[g.hint] * Math.pow(0.8, g.wrong)));
+  h += `<div class="q">🏛️ ${esc(c.name)}의 수도는 어디일까요?</div>`;
+  if (g.hint < 3) {
+    h += `<div class="row" id="ansRow"><input class="answer" id="ans" placeholder="수도 이름을 입력하세요" autocomplete="off" value="${esc(g.last)}" onkeydown="if(event.key==='Enter')submitAns()"><button class="btn primary" onclick="submitAns()">확인</button></div>`;
+  }
+  h += `<div class="hintbox">`;
+  const main = c.cap.replace(/\s/g,'');
+  if (g.hint >= 1) h += `<div class="hint">💡 힌트 1: <b>${[...main].length}글자</b>, 첫 글자는 <big>${main[0]}</big></div>`;
+  if (g.hint >= 2) h += `<div class="hint">💡 힌트 2: 초성 <big>${chosung(c.cap)}</big></div>`;
+  if (g.hint >= 3) {
+    if (!g.choices) {
+      const pool = shuffle(keys().filter(k => k !== sel && C[k].cont === c.cont && C[k].cap !== c.cap)).slice(0,3).map(k => C[k].cap);
+      g.choices = shuffle([c.cap, ...pool]);
+    }
+    h += `<div class="hint">💡 힌트 3: 이 중에 정답이 있어요!</div><div class="choices" id="ansRow">${g.choices.map(x => `<button class="btn ghost" onclick="submitAns(this.textContent)">${esc(x)}</button>`).join('')}</div>`;
+  }
+  h += `</div><div class="tries">남은 기회 ${'❤️'.repeat(3 - g.wrong)}${'🤍'.repeat(g.wrong)} · 지금 맞히면 <b>${possible}점</b>${S.streak >= 2 ? ' + 🔥 연속 보너스' : ''}</div>`;
+  h += `<div class="actions">${g.hint < 3 ? `<button class="btn gold" onclick="useHint()">💡 힌트 보기 (${['첫 글자','초성','보기 4개'][g.hint]})</button>` : ''}<button class="btn ghost" onclick="giveUp()">🏳️ 포기</button><button class="btn ghost" onclick="zoomCountry('${sel}')">🔍 위치</button></div>`;
+  h += `<div id="msg"></div>`;
+  P.innerHTML = h + progressHTML();
+}
+
+function useHint() { if (!game || game.hint >= 3) return; const a = $('ans'); if (a) game.last = a.value; game.hint++; renderPanel(); const b = $('ans'); b && b.focus(); }
+
+function submitAns(v) {
+  if (!game) return;
+  const c = C[game.k];
+  const val = v != null ? v : ($('ans') ? $('ans').value : '');
+  if (!val.trim()) { const a = $('ans'); a && a.focus(); return; }
+  const ok = [c.cap, ...c.alts].some(x => norm(x) === norm(val));
+  if (ok) return win(c);
+  game.wrong++; game.last = '';
+  sNO(); S.streak = 0; hud(); save();
+  if (game.wrong >= 3) return lose(c, val);
+  if (game.choices) game.choices = game.choices.filter(x => x !== val);
+  renderPanel();
+  const row = $('ansRow'); row && row.classList.add('shake');
+  $('msg').innerHTML = `<div class="msg no">❌ '${esc(val)}'${josa(val,'은','는')} 정답이 아니에요. 다시 생각해 봐요!${game.hint < 3 ? ' 힌트를 써 보는 것도 좋아요.' : ''}</div>`;
+  const a = $('ans'); a && a.focus();
+}
+
+function win(c) {
+  const t = TIER[c.tier], rate = HINT_RATE[game.hint] * Math.pow(0.8, game.wrong);
+  const base = Math.max(1, Math.round(t.base * rate)), bonus = Math.round(t.bonus * rate);
+  S.streak++; S.best = Math.max(S.best, S.streak);
+  const sb = S.streak >= 3 ? 5 : 0;
+  const pts = base + bonus + sb;
+  S.score += pts; S.conq[c.id] = pts; save();
+  sOK(); popAt(window.event, '+' + pts);
+  game = null; paint(); hud(); renderPanel();
+  let detail = `기본 ${base}점`; if (bonus) detail += ` + 숨은 나라 가산점 ${bonus}점`; if (sb) detail += ` + 🔥${S.streak}연속 보너스 ${sb}점`;
+  $('panel').querySelector('.msg').outerHTML = `<div class="msg ok"><span class="big">🎉 정답! ${esc(c.cap)}</span>${c.name}${josa(c.name,'을','를')} 정복했어요! <b>+${pts}점</b><br><small>${detail}</small></div>`;
+  checkFinish();
+}
+function lose(c) {
+  S.fail[c.id] = 1; save(); game = null; paint(); hud(); renderPanel();
+  $('panel').querySelector('.msg').outerHTML = `<div class="msg no"><span class="big">😢 정답은 ${esc(c.cap)}</span>아쉽지만 괜찮아요. 이제 ${c.name}의 수도를 알게 됐어요!</div>`;
+  checkFinish();
+}
+function giveUp() { if (!game) return; S.streak = 0; sNO(); lose(C[game.k]); }
+
+function checkFinish() { const n = keys().length; if (Object.keys(S.conq).length + Object.keys(S.fail).length >= n) setTimeout(finishModal, 900); }
+function finishModal() {
+  const n = keys().length, won = Object.keys(S.conq).length;
+  $('modalBox').innerHTML = `<div style="font-size:56px">🌏👑</div><h2>세계 일주 완료!</h2>
+    <p>${n}개 나라 중 <b>${won}개</b>를 정복했어요.<br>최종 점수 <b style="color:var(--red);font-size:22px">${S.score}점</b> · 최고 연속 ${S.best}번</p>
+    <p style="font-size:14px;color:#5d6b7a">놓친 나라는 지도에서 빨간색이에요. 다시 눌러 수도를 복습해 보세요!</p>
+    <div class="actions" style="justify-content:center"><button class="btn primary" onclick="$('modal').classList.remove('show')">지도 보기</button><button class="btn ghost" onclick="resetAll()">처음부터 다시</button></div>`;
+  $('modal').classList.add('show');
+}
+function resetAll() {
+  if (!confirm('지금까지의 기록을 모두 지우고 처음부터 할까요?')) return;
+  S = { score:0, conq:{}, fail:{}, found:{}, findScore:0, streak:0, best:0 }; save();
+  $('modal').classList.remove('show'); setMode(mode); zoomCont('ALL');
+}
+
+// ---------- 나라 찾기 모드 ----------
+function newFind() {
+  const left = keys().filter(k => !S.found[k]);
+  gC.selectAll('path').classed('target', false);
+  if (!left.length) { findQ = null; renderFind(true); return; }
+  findQ = { k: left[Math.floor(Math.random()*left.length)], wrong:0, hint:0, done:false };
+  sel = null; paint(); renderFind();
+}
+function renderFind(allDone) {
+  const P = $('panel');
+  if (!findQ) {
+    P.innerHTML = `<div class="welcome"><h2>📍 나라 찾기</h2>
+      <p>${allDone ? '🎉 모든 나라의 위치를 찾았어요! 대단해요!' : '나라 이름이 나오면 <b>지도에서 그 나라를 찾아 클릭</b>하세요. 이번엔 지도에 이름이 안 나와요!'}</p>
+      <ul><li>★ 10점 · ★★ 20점 · ★★★ 30점</li><li>틀릴 때마다 점수가 조금씩 줄고, 3번 틀리면 정답을 알려줘요.</li><li>💡 힌트를 누르면 어느 대륙인지 확대해서 보여줘요.</li></ul>
+      <div class="actions"><button class="btn primary" onclick="newFind()">▶ 시작하기</button><button class="btn ghost" onclick="resetFind()">찾기 기록 지우기</button></div></div>` + progressHTML();
+    return;
+  }
+  const c = C[findQ.k], t = TIER[c.tier];
+  let h = `<div class="q" style="font-size:16px;color:var(--sub)">이 나라는 어디에 있을까요?</div>
+    <div class="chead"><img class="flag" src="${flagUrl(c.a2)}" alt="" onerror="this.style.visibility='hidden'"><div><div class="cname">${esc(c.name)}</div><div class="badges"><span class="badge t${c.tier}">${t.label}</span>${findQ.hint ? `<span class="badge">${CONT[c.cont]}</span>` : ''}</div></div></div>`;
+  if (findQ.done) {
+    h += `<div class="intro">${esc(c.intro)}<br>🏛️ 수도는 <b>${esc(c.cap)}</b>${josa(c.cap.replace(/[^가-힣]/g,'') || '가', '이에요', '예요')}.</div>`;
+  } else {
+    h += `<div class="tries" style="font-size:14px">남은 기회 ${'❤️'.repeat(3 - findQ.wrong)}${'🤍'.repeat(findQ.wrong)}</div>`;
+  }
+  h += `<div id="msg"></div><div class="actions">` + (findQ.done
+    ? `<button class="btn primary" onclick="newFind()">▶ 다음 나라</button>`
+    : `${!findQ.hint ? `<button class="btn gold" onclick="findHint()">💡 대륙 힌트</button>` : ''}<button class="btn ghost" onclick="findGiveUp()">🏳️ 모르겠어요</button>`) + `</div>`;
+  P.innerHTML = h + progressHTML();
+}
+function findHint() { if (!findQ) return; findQ.hint = 1; zoomCont(C[findQ.k].cont); renderFind(); }
+function findClick(k, e) {
+  if (!findQ || findQ.done) { if (S.found[k]) { sel = k; paint(); } return; }
+  const c = C[findQ.k];
+  if (k === findQ.k) {
+    const t = TIER[c.tier], rate = Math.pow(0.7, findQ.wrong) * (findQ.hint ? 0.7 : 1);
+    S.streak++; S.best = Math.max(S.best, S.streak);
+    const pts = Math.max(1, Math.round((t.base + t.bonus) * rate)) + (S.streak >= 3 ? 5 : 0);
+    S.findScore += pts; S.found[k] = 1; save();
+    findQ.done = true; sel = k; sOK(); popAt(e, '+' + pts); paint(); hud(); renderFind();
+    $('msg').innerHTML = `<div class="msg ok"><span class="big">🎯 찾았다! +${pts}점</span></div>`;
+    return;
+  }
+  findQ.wrong++; S.streak = 0; sNO(); save(); hud();
+  const p = gC.selectAll('path').filter(d => d.key === k); p.classed('wrong', true); setTimeout(() => p.classed('wrong', false), 900);
+  const nm = C[k].name, ie = josa(nm, '이에요', '예요');
+  if (findQ.wrong >= 3) return revealFind(`그건 ${nm}${ie}.`);
+  renderFind();
+  $('msg').innerHTML = `<div class="msg no">❌ 그건 <b>${esc(nm)}</b>${ie}. 다시 찾아봐요!</div>`;
+}
+function revealFind(pre) {
+  const c = C[findQ.k]; findQ.done = true; S.streak = 0; save(); hud();
+  sel = findQ.k; paint();
+  gC.selectAll('path').filter(d => d.key === findQ.k).classed('target', true);
+  zoomCountry(findQ.k, 6);
+  renderFind();
+  $('msg').innerHTML = `<div class="msg no">${pre ? esc(pre) + ' ' : ''}<b>${esc(c.name)}</b>${josa(c.name,'은','는')} 깜빡이는 곳이에요. 위치를 기억해 둬요!</div>`;
+  setTimeout(() => gC.selectAll('path').classed('target', false), 4000);
+}
+function findGiveUp() { if (findQ && !findQ.done) { sNO(); revealFind(); } }
+function resetFind() { if (!confirm('나라 찾기 기록을 지울까요?')) return; S.found = {}; S.findScore = 0; save(); paint(); hud(); renderFind(); }
+
+$('modal').addEventListener('click', e => { if (e.target.id === 'modal') $('modal').classList.remove('show'); });
+</script>
+</body>
+</html>
