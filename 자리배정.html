@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>두근두근 자리 바꾸기</title>
+<style>
+  :root {
+    --bg: #f3f5fb;
+    --card: #ffffff;
+    --text: #1b2333;
+    --muted: #5b6577;
+    --line: #d6dbe6;
+    --accent: #2457d6;
+    --accent-press: #1a44ad;
+    --accent-soft: #e6edfc;
+    --warn: #b4321f;
+    --warn-soft: #fdeae6;
+    --board: #24533f;
+    --board-text: #e9f5ee;
+    --wood: #b9844f;
+    --wood-dark: #8a5c31;
+    --seat: #fff8e8;
+    --seat-line: #e8d6ad;
+    --seat-off: #eceef3;
+    --spin: #fff1c2;
+    --sel: #ffcf3f;
+    --q1: #6b8cff;
+    --q2: #a46bff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11151d;
+      --card: #1b2130;
+      --text: #f1f4fa;
+      --muted: #a4adbf;
+      --line: #333c50;
+      --accent: #7ea4ff;
+      --accent-press: #4774e0;
+      --accent-soft: #1f2c4d;
+      --warn: #ff8a75;
+      --warn-soft: #3a1f1a;
+      --board: #1c3d2f;
+      --board-text: #d6efe0;
+      --wood: #9a6c3e;
+      --wood-dark: #6e4a26;
+      --seat: #2a2a22;
+      --seat-line: #4d4632;
+      --seat-off: #1f2533;
+      --spin: #4a4120;
+      --sel: #e0b02c;
+      --q1: #4a63c4;
+      --q2: #7448c0;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", "Noto Sans KR", system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+  }
+  .wrap { max-width: 1400px; margin: 0 auto; padding: 18px 16px 40px; }
+  header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  h1 { font-size: clamp(1.5rem, 3.6vw, 2.2rem); margin: 0; letter-spacing: -0.02em; }
+  h1 .heart { display: inline-block; animation: beat 1.1s infinite; }
+  @keyframes beat { 0%,100% { transform: scale(1); } 15% { transform: scale(1.25); } 30% { transform: scale(1); } 45% { transform: scale(1.18); } }
+  header .sub { color: var(--muted); }
+
+  .layout { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  @media (min-width: 1000px) { .layout { grid-template-columns: 330px 1fr; align-items: start; } }
+  body.big .layout { grid-template-columns: 1fr; }
+  body.big .panel, body.big header { display: none; }
+  body.big .wrap { max-width: none; padding: 10px; }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+  .panel { display: flex; flex-direction: column; gap: 14px; }
+  .group > .title { display: block; font-weight: 700; margin-bottom: 6px; }
+  .seg { display: flex; gap: 6px; flex-wrap: wrap; }
+  .seg button {
+    flex: 1 1 0; min-width: 0; font: inherit; font-size: 0.95rem; padding: 8px 6px; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--bg); color: var(--text); cursor: pointer;
+  }
+  .seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+  .stepper { display: flex; align-items: center; gap: 8px; }
+  .stepper button {
+    width: 42px; height: 42px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg);
+    color: var(--text); font-size: 1.4rem; cursor: pointer; line-height: 1;
+  }
+  .stepper input {
+    width: 80px; height: 42px; text-align: center; font: inherit; font-size: 1.3rem; font-weight: 700;
+    border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--text);
+  }
+  .stepper input:disabled { opacity: 0.7; }
+  textarea {
+    width: 100%; min-height: 130px; resize: vertical; font: inherit; color: var(--text); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 12px; padding: 10px;
+  }
+  textarea:focus, .stepper input:focus { outline: 3px solid var(--accent-soft); border-color: var(--accent); }
+  .hint { color: var(--muted); font-size: 0.88rem; margin: 6px 0 0; }
+  .check { display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 8px; font-size: 0.95rem; }
+  .check input { width: 18px; height: 18px; }
+  .btn {
+    font: inherit; font-weight: 700; border: 0; border-radius: 12px; padding: 10px 14px; cursor: pointer;
+    background: var(--accent-soft); color: var(--accent);
+  }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn.on { background: var(--sel); color: #3a2a00; }
+  .go {
+    width: 100%; font-size: 1.35rem; padding: 16px; border-radius: 16px; color: #fff;
+    background: linear-gradient(135deg, #ff6b6b, #ff9f43 45%, #feca57);
+    box-shadow: 0 6px 0 #d8572f; transition: transform .08s, box-shadow .08s;
+  }
+  .go:hover:not(:disabled) { filter: brightness(1.05); }
+  .go:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 2px 0 #d8572f; }
+  .status { font-size: 0.95rem; padding: 8px 12px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .status.bad { background: var(--warn-soft); color: var(--warn); }
+
+  /* ---------- 교실 ---------- */
+  .stagecard { padding: 14px; }
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .toolbar .spacer { flex: 1; }
+  .toolbar .msg { color: var(--muted); font-size: 0.95rem; }
+  .room { display: flex; flex-direction: column; gap: 12px; }
+  .room.teacher { flex-direction: column-reverse; }
+  .front { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .room.teacher .front { flex-direction: column-reverse; }
+  .board {
+    width: min(80%, 760px); background: var(--board); color: var(--board-text); text-align: center;
+    border: 8px solid var(--wood); border-radius: 8px; padding: 6px; font-weight: 700; letter-spacing: 0.4em;
+    font-size: clamp(0.9rem, 1.8vw, 1.2rem);
+  }
+  .podium {
+    background: linear-gradient(var(--wood), var(--wood-dark)); color: #fff; font-weight: 800;
+    padding: 6px 28px; border-radius: 8px 8px 4px 4px; box-shadow: 0 4px 0 rgba(0,0,0,0.18);
+    font-size: clamp(0.95rem, 1.8vw, 1.15rem);
+  }
+  .rows { display: flex; flex-direction: column; gap: clamp(6px, 1.2vh, 12px); }
+  .room.teacher .rows { flex-direction: column-reverse; }
+  .row { display: flex; gap: clamp(6px, 1vw, 12px); }
+  .room.teacher .row { flex-direction: row-reverse; }
+  .aisle { flex: 0 0 clamp(8px, 2vw, 28px); }
+
+  .seat {
+    position: relative; flex: 1 1 0; min-width: 0; height: clamp(58px, 10vh, 112px);
+    perspective: 700px; cursor: default; user-select: none; -webkit-user-select: none;
+  }
+  body.big .seat { height: clamp(64px, 13vh, 150px); }
+  .inner {
+    position: absolute; inset: 0; transition: transform .55s cubic-bezier(.3,1.4,.5,1); transform-style: preserve-3d;
+  }
+  .seat.covered .inner { transform: rotateY(180deg); }
+  .face {
+    position: absolute; inset: 0; border-radius: 12px; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden;
+    background: var(--seat); border: 2px solid var(--seat-line); padding: 4px;
+  }
+  .face.q {
+    transform: rotateY(180deg); color: #fff; border-color: transparent;
+    background: linear-gradient(135deg, var(--q1), var(--q2));
+  }
+  .face.q .big { font-size: clamp(1.6rem, 4vw, 2.6rem); font-weight: 900; line-height: 1; }
+  .no {
+    position: absolute; top: 4px; left: 7px; font-size: clamp(0.7rem, 1.2vw, 0.9rem); font-weight: 800;
+    color: var(--muted); z-index: 2;
+  }
+  .face.q .no { color: rgba(255,255,255,0.85); }
+  .emoji { font-size: clamp(1rem, 2.2vw, 1.6rem); line-height: 1.1; }
+  .name {
+    font-weight: 800; font-size: clamp(0.95rem, 2.1vw, 1.55rem); line-height: 1.15; text-align: center;
+    word-break: keep-all; overflow-wrap: anywhere;
+  }
+  body.big .name { font-size: clamp(1.1rem, 2.8vw, 2.2rem); }
+  .name.long { font-size: clamp(0.8rem, 1.6vw, 1.15rem); }
+  .star { position: absolute; top: 3px; right: 6px; font-size: 0.85rem; }
+
+  .seat.off .face { background: var(--seat-off); border-style: dashed; border-color: var(--line); }
+  .seat.off .name { color: var(--muted); font-weight: 600; font-size: 0.9rem; }
+  .seat.empty .name { color: var(--muted); font-weight: 600; }
+  .seat.spin .face.n { background: var(--spin); }
+  .seat.spin .name { filter: blur(1.2px); opacity: 0.75; }
+  .seat.pop .inner { animation: pop .45s ease; }
+  @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.16); } 100% { transform: scale(1); } }
+  .seat.covered:not(.off) { cursor: pointer; }
+  .seat.covered:not(.off):hover .inner { transform: rotateY(180deg) translateY(-4px); }
+  .seat.wiggle .inner { animation: wiggle .5s ease; }
+  @keyframes wiggle { 0%,100% { transform: rotateY(180deg) rotate(0); } 25% { transform: rotateY(180deg) rotate(-6deg); } 75% { transform: rotateY(180deg) rotate(6deg); } }
+  .seat.swappable { cursor: pointer; }
+  .seat.swappable:hover .face.n { border-color: var(--accent); }
+  .seat.sel .face.n { border-color: var(--sel); box-shadow: 0 0 0 4px var(--sel) inset; }
+  .room.editing .seat { cursor: pointer; }
+  .room.editing .seat .face.n { border-style: dashed; }
+  .room.editing .seat:not(.off) .face.n { border-color: var(--accent); }
+
+  #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+  .banner {
+    position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%) scale(0.4); opacity: 0; z-index: 60;
+    background: var(--card); color: var(--text); border: 3px solid var(--sel); border-radius: 20px;
+    padding: 18px 30px; font-size: clamp(1.4rem, 4vw, 2.4rem); font-weight: 900; pointer-events: none;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.25); transition: transform .35s cubic-bezier(.3,1.6,.5,1), opacity .3s;
+    text-align: center; white-space: nowrap;
+  }
+  .banner.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+  @media (max-width: 600px) {
+    .board { width: 100%; letter-spacing: 0.2em; }
+    .face { border-radius: 8px; padding: 2px; }
+    .emoji { display: none; }
+  }
+  .print-head { display: none; }
+  @page { size: A4 landscape; margin: 10mm; }
+  @media print {
+    .panel, header, .toolbar, #confetti, .banner { display: none !important; }
+    html, body { background: #fff !important; color: #000 !important; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .wrap { max-width: none; padding: 0; }
+    .layout { display: block; }
+    .card { border: 0; padding: 0; background: #fff; }
+    .print-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4mm; }
+    .print-head b { font-size: 18pt; }
+    .print-head span { font-size: 11pt; color: #444; }
+    .room { gap: 4mm; }
+    .rows { gap: 3mm; }
+    .row { gap: 3mm; }
+    .aisle { flex-basis: 8mm; }
+    .seat, body.big .seat { height: 24mm; break-inside: avoid; }
+    .seat .inner { transform: none !important; animation: none !important; }
+    .face { background: #fff !important; border: 1.5px solid #333 !important; border-radius: 3mm; }
+    .face.q { display: none; }
+    .seat.off .face { border: 1px dashed #aaa !important; }
+    .no { color: #555 !important; font-size: 10pt; }
+    .name, body.big .name { color: #000 !important; font-size: 20pt; filter: none !important; opacity: 1 !important; }
+    .name.long { font-size: 14pt; }
+    .emoji { display: none; }
+    .board { width: 60%; border-width: 3mm; font-size: 12pt; padding: 1mm; background: var(--board) !important; color: #fff !important; }
+    .podium { font-size: 13pt; padding: 1.5mm 10mm; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><span class="heart">💓</span> 두근두근 자리 바꾸기</h1>
+    <span class="sub">오늘 내 짝은 누구일까?</span>
+  </header>
+
+  <div class="layout">
+    <aside class="panel card">
+      <div class="group">
+        <span class="title">책상 배치</span>
+        <div class="seg" id="layoutSeg">
+          <button data-v="6x5">가로 6자리 × 5줄</button>
+          <button data-v="5x6">가로 5자리 × 6줄</button>
+        </div>
+        <label class="check" id="pairWrap"><input type="checkbox" id="pair"> 두 자리씩 짝으로 띄우기</label>
+      </div>
+
+      <div class="group">
+        <span class="title">학생 수</span>
+        <div class="stepper">
+          <button id="minus" aria-label="한 명 줄이기">−</button>
+          <input id="count" type="number" min="1" max="30" inputmode="numeric">
+          <button id="plus" aria-label="한 명 늘리기">+</button>
+          <span>명</span>
+        </div>
+        <p class="hint" id="countHint">최대 30명. 줄이면 뒷줄부터 빈자리가 돼요.</p>
+      </div>
+
+      <div class="group">
+        <span class="title">학생 명단 <span style="font-weight:400;color:var(--muted)">(선택)</span></span>
+        <textarea id="names" placeholder="한 줄에 한 명씩, 또는 쉼표로 구분&#10;예) 김하늘&#10;*이바다  ← 앞 두 줄에 앉혀요"></textarea>
+        <p class="hint">비워 두면 <b>출석번호(1번, 2번…)</b>로 배정해요. 이름 앞에 <b>*</b>을 붙이면 눈이 나쁘거나 앞에 앉아야 하는 학생을 교탁 앞 두 줄에 앉혀요.</p>
+      </div>
+
+      <div class="group">
+        <span class="title">공개 방식</span>
+        <div class="seg" id="revealSeg">
+          <button data-v="slot">🎰 슬롯머신</button>
+          <button data-v="flip">🃏 카드 뒤집기</button>
+        </div>
+        <p class="hint" id="revealHint"></p>
+      </div>
+
+      <div class="group" id="speedGroup">
+        <span class="title">공개 속도</span>
+        <div class="seg" id="speedSeg">
+          <button data-v="fast">빠르게</button>
+          <button data-v="normal">보통</button>
+          <button data-v="slow">조마조마</button>
+        </div>
+      </div>
+
+      <label class="check"><input type="checkbox" id="sound"> 효과음 켜기</label>
+
+      <div class="status" id="status"></div>
+      <button class="btn go" id="go">🎲 자리 바꾸기!</button>
+    </aside>
+
+    <main class="card stagecard">
+      <div class="toolbar">
+        <button class="btn" id="editBtn">🪑 빈자리 편집</button>
+        <button class="btn" id="viewBtn">🔄 학생 시점으로 (TV용)</button>
+        <button class="btn" id="skipBtn" hidden>⏩ 바로 공개</button>
+        <button class="btn" id="flipAllBtn" hidden>🃏 모두 뒤집기</button>
+        <span class="msg" id="msg"></span>
+        <span class="spacer"></span>
+        <button class="btn" id="bigBtn">🖥️ 크게 보기</button>
+        <button class="btn" id="printBtn">🖨️ 교탁용 인쇄</button>
+      </div>
+      <div class="print-head"><b>우리 반 자리표 — 교탁에서 본 모습</b><span id="printDate"></span></div>
+      <div class="room" id="room">
+        <div class="front">
+          <div class="board">칠 판</div>
+          <div class="podium">교 탁</div>
+        </div>
+        <div class="rows" id="rows"></div>
+      </div>
+    </main>
+  </div>
+</div>
+<canvas id="confetti"></canvas>
+<div class="banner" id="banner"></div>
+
+<script>
+(() => {
+  const TOTAL = 30;
+  const EMOJI = ['🐶','🐱','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐥','🦄','🐝','🐢','🐙','🦖','🐳','🐬','🦉','🦔','🐿️','🦦','🐹','🦒','🦩','🐞','🦋'];
+  const $ = s => document.querySelector(s);
+
+  const store = {
+    get(k) { try { return JSON.parse(localStorage.getItem('seat-' + k)); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem('seat-' + k, JSON.stringify(v)); } catch (e) {} }
+  };
+
+  const state = Object.assign({
+    layout: '6x5', pair: true, count: 30, names: '', reveal: 'slot', speed: 'normal',
+    sound: true, disabled: [], result: null, teacher: true
+  }, store.get('state') || {});
+  // 처음엔 교탁에서 학생들을 바라보는 모습(선생님 시점)으로 시작
+  if (!state.viewV2) { state.teacher = true; state.viewV2 = true; }
+  const save = () => store.set('state', state);
+
+  let editing = false, animating = false, skip = false, selected = null;
+
+  /* ---------- 기본 계산 ---------- */
+  const geo = () => state.layout === '6x5' ? { cols: 6, rows: 5 } : { cols: 5, rows: 6 };
+  const isOff = i => state.disabled.includes(i);
+  const activeSeats = () => [...Array(TOTAL).keys()].filter(i => !isOff(i));
+  function seatNumbers() {
+    const map = {}; let n = 1;
+    activeSeats().forEach(i => map[i] = n++);
+    return map;
+  }
+  function parseNames() {
+    return state.names.split(/[\n,]+/).map(s => s.trim()).filter(Boolean).map(s => {
+      const front = /^[*★]/.test(s);
+      return { name: s.replace(/^[*★]\s*/, ''), front };
+    }).filter(s => s.name);
+  }
+  function students() {
+    const list = parseNames();
+    if (list.length) return list.slice(0, TOTAL);
+    return Array.from({ length: state.count }, (_, k) => ({ name: (k + 1) + '번', front: false }));
+  }
+  function studentCount() {
+    const n = parseNames().length;
+    return n ? Math.min(n, TOTAL) : state.count;
+  }
+  function defaultDisabled(n) {
+    const off = [];
+    for (let i = TOTAL - 1; off.length < TOTAL - n; i--) off.push(i);
+    return off;
+  }
+  const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  /* ---------- 소리 ---------- */
+  let ac = null;
+  function audio() {
+    if (!state.sound) return null;
+    try { if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume(); } catch (e) { return null; }
+    return ac;
+  }
+  function tone(freq, dur, type = 'sine', vol = 0.12, when = 0) {
+    const a = audio(); if (!a) return;
+    const t = a.currentTime + when, o = a.createOscillator(), g = a.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(a.destination); o.start(t); o.stop(t + dur + 0.02);
+  }
+  const SCALE = [0, 2, 4, 7, 9];
+  const tick = () => tone(1400 + Math.random() * 400, 0.03, 'square', 0.025);
+  const ding = k => { const s = SCALE[k % 5] + 12 * Math.floor(k / 5) % 24; tone(523.25 * Math.pow(2, s / 12), 0.35, 'triangle', 0.13); };
+  const fanfare = () => [523.25, 659.25, 783.99, 1046.5].forEach((f, k) => tone(f, k === 3 ? 0.7 : 0.18, 'triangle', 0.16, k * 0.13));
+  const whoosh = () => tone(260, 0.25, 'sawtooth', 0.04);
+
+  /* ---------- 그리기 ---------- */
+  const rowsEl = $('#rows'), room = $('#room');
+  let seatEls = [];
+
+  function build() {
+    const { cols, rows } = geo();
+    rowsEl.innerHTML = ''; seatEls = [];
+    for (let r = 0; r < rows; r++) {
+      const row = document.createElement('div'); row.className = 'row';
+      for (let c = 0; c < cols; c++) {
+        const i = r * cols + c;
+        const s = document.createElement('div');
+        s.className = 'seat'; s.dataset.i = i;
+        s.innerHTML = '<div class="inner"><div class="face n"><span class="no"></span><span class="star"></span><span class="emoji"></span><span class="name"></span></div>' +
+                      '<div class="face q"><span class="no"></span><span class="big">?</span></div></div>';
+        s.addEventListener('click', () => onSeat(i));
+        row.appendChild(s); seatEls[i] = s;
+        if (state.layout === '6x5' && state.pair && (c === 1 || c === 3)) {
+          const g = document.createElement('div'); g.className = 'aisle'; row.appendChild(g);
+        }
+      }
+      rowsEl.appendChild(row);
+    }
+    paint();
+  }
+
+  function setFace(i, name, emoji, front) {
+    const s = seatEls[i];
+    const nm = s.querySelector('.name');
+    nm.textContent = name; nm.classList.toggle('long', name.length > 4);
+    s.querySelector('.emoji').textContent = emoji || '';
+    s.querySelector('.star').textContent = front ? '⭐' : '';
+  }
+
+  function paint() {
+    const nums = seatNumbers();
+    seatEls.forEach((s, i) => {
+      const off = isOff(i);
+      s.classList.toggle('off', off);
+      s.querySelectorAll('.no').forEach(n => n.textContent = off ? '' : nums[i]);
+      s.classList.remove('spin', 'sel', 'empty');
+      if (off) { setFace(i, editing ? '빈자리' : '', ''); s.classList.remove('covered'); return; }
+      const r = state.result && state.result[i];
+      if (r) setFace(i, r.name, r.emoji, r.front);
+      else if (state.result) { setFace(i, '—', ''); s.classList.add('empty'); }
+      else setFace(i, '', '');
+      s.classList.toggle('swappable', !!state.result && !editing);
+    });
+    room.classList.toggle('teacher', state.teacher);
+    room.classList.toggle('editing', editing);
+    updateUI();
+  }
+
+  function updateUI() {
+    document.querySelectorAll('#layoutSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === state.layout));
+    document.querySelectorAll('#revealSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === state.reveal));
+    document.querySelectorAll('#speedSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === state.speed));
+    $('#pairWrap').style.display = state.layout === '6x5' ? '' : 'none';
+    $('#pair').checked = state.pair;
+    $('#sound').checked = state.sound;
+    $('#speedGroup').style.display = state.reveal === 'slot' ? '' : 'none';
+    $('#revealHint').textContent = state.reveal === 'slot'
+      ? '이름이 빙글빙글 돌다가 1번 자리부터 하나씩 멈춰요.'
+      : '모든 자리가 ? 카드로 덮여요. 학생이 나와서 직접 눌러 뒤집어요!';
+
+    const named = parseNames().length > 0;
+    const cnt = $('#count');
+    cnt.value = studentCount(); cnt.disabled = named;
+    $('#minus').disabled = named; $('#plus').disabled = named;
+    $('#countHint').textContent = named
+      ? `명단에서 ${studentCount()}명을 읽었어요.` + (parseNames().length > TOTAL ? ' (30명까지만 앉을 수 있어요)' : '')
+      : '최대 30명. 줄이면 뒷줄부터 빈자리가 돼요.';
+
+    const seats = activeSeats().length, n = studentCount();
+    const st = $('#status');
+    if (seats < n) {
+      st.className = 'status bad';
+      st.textContent = `자리 ${seats}개 · 학생 ${n}명 — 자리가 ${n - seats}개 모자라요. 「빈자리 편집」에서 자리를 늘려 주세요.`;
+    } else {
+      st.className = 'status';
+      st.textContent = `자리 ${seats}개 · 학생 ${n}명` + (seats > n ? ` (빈자리 ${seats - n}개)` : '');
+    }
+    $('#go').disabled = animating || seats < n || editing;
+    $('#editBtn').classList.toggle('on', editing);
+    $('#editBtn').textContent = editing ? '✅ 편집 끝내기' : '🪑 빈자리 편집';
+    $('#editBtn').disabled = animating;
+    $('#viewBtn').textContent = state.teacher ? '🔄 학생 시점으로 (TV용)' : '🔄 교탁 시점으로';
+    $('#skipBtn').hidden = !(animating && state.reveal === 'slot');
+    const covered = seatEls.some(s => s.classList.contains('covered'));
+    $('#flipAllBtn').hidden = !covered;
+
+    const msg = $('#msg');
+    if (editing) msg.textContent = '자리를 눌러 빈자리로 만들거나 되살려요.';
+    else if (covered) msg.textContent = '? 카드를 눌러 뒤집어 보세요!';
+    else if (state.result && !animating) msg.textContent = '두 자리를 차례로 누르면 서로 바꿀 수 있어요.';
+    else msg.textContent = '';
+  }
+
+  /* ---------- 배정 ---------- */
+  function makeResult() {
+    const { cols } = geo();
+    const seats = activeSeats();
+    const list = shuffle(students());
+    const emojis = shuffle(EMOJI);
+    list.forEach((s, k) => s.emoji = emojis[k % emojis.length]);
+    const result = Array(TOTAL).fill(null);
+    const fronts = list.filter(s => s.front), rest = list.filter(s => !s.front);
+    const frontSeats = shuffle(seats.filter(i => Math.floor(i / cols) < 2));
+    fronts.forEach(s => { const i = frontSeats.shift(); if (i !== undefined) result[i] = s; else rest.unshift(s); });
+    const free = seats.filter(i => !result[i]);
+    // 학생 수가 자리보다 적으면 남는 자리가 무작위로 흩어지지 않게 번호 순으로 채워요
+    rest.forEach((s, k) => result[free[k]] = s);
+    return result;
+  }
+
+  async function go() {
+    if (animating) return;
+    audio();
+    selected = null;
+    const result = makeResult();
+    state.result = result; save();
+    if (state.reveal === 'slot') await runSlot(result);
+    else runFlip();
+  }
+
+  async function runSlot(result) {
+    animating = true; skip = false;
+    const seats = activeSeats();
+    const pool = students().map(s => s.name);
+    paint();
+    const spinning = new Set(seats);
+    seats.forEach(i => seatEls[i].classList.add('spin'));
+    const roll = setInterval(() => {
+      spinning.forEach(i => setFace(i, pool[Math.floor(Math.random() * pool.length)], EMOJI[Math.floor(Math.random() * EMOJI.length)]));
+      if (spinning.size) tick();
+    }, 75);
+    updateUI();
+    showBanner('🎲 두구두구두구…', 1100);
+    await sleep(1200);
+    const delay = { fast: 70, normal: 220, slow: 550 }[state.speed];
+    let k = 0;
+    for (const i of seats) {
+      if (!skip) await sleep(delay);
+      spinning.delete(i);
+      const s = seatEls[i], r = result[i];
+      s.classList.remove('spin');
+      if (r) setFace(i, r.name, r.emoji, r.front); else { setFace(i, '—', ''); s.classList.add('empty'); }
+      if (!skip) { s.classList.remove('pop'); void s.offsetWidth; s.classList.add('pop'); ding(k++); }
+    }
+    clearInterval(roll);
+    animating = false;
+    paint();
+    celebrate();
+  }
+
+  function runFlip() {
+    paint();
+    whoosh();
+    activeSeats().forEach((i, k) => {
+      const s = seatEls[i];
+      setTimeout(() => { s.classList.add('covered'); s.classList.remove('wiggle'); void s.offsetWidth; s.classList.add('wiggle'); if (k % 3 === 0) tick(); updateUI(); }, k * 25);
+    });
+  }
+
+  let flipCount = 0;
+  function flip(i) {
+    const s = seatEls[i];
+    if (!s.classList.contains('covered')) return;
+    s.classList.remove('covered', 'wiggle');
+    ding(flipCount++);
+    if (!seatEls.some(e => e.classList.contains('covered'))) { flipCount = 0; setTimeout(celebrate, 450); }
+    updateUI();
+  }
+
+  function onSeat(i) {
+    if (animating) return;
+    if (editing) {
+      if (isOff(i)) state.disabled = state.disabled.filter(x => x !== i);
+      else state.disabled.push(i);
+      state.result = null; save(); paint(); tick();
+      return;
+    }
+    const s = seatEls[i];
+    if (s.classList.contains('covered')) { flip(i); return; }
+    if (!state.result || isOff(i)) return;
+    if (selected === null) { selected = i; s.classList.add('sel'); tick(); return; }
+    if (selected === i) { s.classList.remove('sel'); selected = null; return; }
+    const a = selected; selected = null;
+    [state.result[a], state.result[i]] = [state.result[i], state.result[a]];
+    save(); paint();
+    [a, i].forEach(x => { const e = seatEls[x]; e.classList.remove('pop'); void e.offsetWidth; e.classList.add('pop'); });
+    whoosh();
+  }
+
+  /* ---------- 축하 ---------- */
+  function showBanner(text, ms) {
+    const b = $('#banner'); b.textContent = text; b.classList.add('show');
+    clearTimeout(showBanner.t); showBanner.t = setTimeout(() => b.classList.remove('show'), ms);
+  }
+  function celebrate() {
+    fanfare();
+    showBanner('🎉 자리 배정 완료! 🎉', 1800);
+    confetti();
+  }
+  const cv = $('#confetti'), cx = cv.getContext('2d');
+  function confetti() {
+    cv.width = innerWidth; cv.height = innerHeight;
+    const colors = ['#ff6b6b', '#feca57', '#48dbfb', '#1dd1a1', '#ff9ff3', '#5f27cd'];
+    const ps = Array.from({ length: 170 }, () => ({
+      x: innerWidth / 2 + (Math.random() - 0.5) * 200, y: innerHeight * 0.35,
+      vx: (Math.random() - 0.5) * 16, vy: -Math.random() * 14 - 4, r: Math.random() * 6 + 4,
+      a: Math.random() * 6, va: (Math.random() - 0.5) * 0.4, c: colors[Math.floor(Math.random() * colors.length)]
+    }));
+    const t0 = performance.now();
+    (function frame(t) {
+      cx.clearRect(0, 0, cv.width, cv.height);
+      ps.forEach(p => {
+        p.vy += 0.35; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.a += p.va;
+        cx.save(); cx.translate(p.x, p.y); cx.rotate(p.a); cx.fillStyle = p.c;
+        cx.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2); cx.restore();
+      });
+      if (t - t0 < 3200) requestAnimationFrame(frame); else cx.clearRect(0, 0, cv.width, cv.height);
+    })(t0);
+  }
+
+  /* ---------- 조작 ---------- */
+  function resetSeats() {
+    state.disabled = defaultDisabled(studentCount());
+    state.result = null; selected = null;
+    save(); paint();
+  }
+  function setCount(n) {
+    n = Math.max(1, Math.min(TOTAL, Math.round(Number(n) || 1)));
+    state.count = n; resetSeats();
+  }
+
+  document.querySelectorAll('#layoutSeg button').forEach(b => b.onclick = () => {
+    if (animating || state.layout === b.dataset.v) return;
+    state.layout = b.dataset.v; state.result = null; selected = null;
+    state.disabled = defaultDisabled(studentCount()); save(); build();
+  });
+  document.querySelectorAll('#revealSeg button').forEach(b => b.onclick = () => { state.reveal = b.dataset.v; save(); updateUI(); });
+  document.querySelectorAll('#speedSeg button').forEach(b => b.onclick = () => { state.speed = b.dataset.v; save(); updateUI(); });
+  $('#pair').onchange = e => { state.pair = e.target.checked; save(); build(); };
+  $('#sound').onchange = e => { state.sound = e.target.checked; save(); if (state.sound) tick(); };
+  $('#minus').onclick = () => setCount(state.count - 1);
+  $('#plus').onclick = () => setCount(state.count + 1);
+  $('#count').onchange = e => setCount(e.target.value);
+  let nameTimer;
+  $('#names').value = state.names;
+  $('#names').oninput = e => {
+    const before = studentCount();
+    state.names = e.target.value; save();
+    clearTimeout(nameTimer);
+    nameTimer = setTimeout(() => { if (studentCount() !== before || activeSeats().length < studentCount()) resetSeats(); else updateUI(); }, 300);
+  };
+  $('#go').onclick = go;
+  $('#skipBtn').onclick = () => { skip = true; };
+  $('#flipAllBtn').onclick = () => {
+    const covered = seatEls.map((s, i) => s.classList.contains('covered') ? i : -1).filter(i => i >= 0);
+    covered.forEach((i, k) => setTimeout(() => flip(i), k * 60));
+  };
+  $('#editBtn').onclick = () => { editing = !editing; selected = null; if (editing) { seatEls.forEach(s => s.classList.remove('covered')); } paint(); };
+  $('#viewBtn').onclick = () => { state.teacher = !state.teacher; save(); paint(); };
+  // 인쇄는 항상 교탁에서 학생들을 바라본 모습(선생님 시점)으로
+  function preparePrint() {
+    seatEls.forEach(s => s.classList.remove('covered', 'spin', 'sel'));
+    paint();
+    room.classList.add('teacher');
+    const d = new Date();
+    $('#printDate').textContent = `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}. · 학생 ${studentCount()}명`;
+  }
+  const restorePrint = () => room.classList.toggle('teacher', state.teacher);
+  window.addEventListener('beforeprint', preparePrint);
+  window.addEventListener('afterprint', restorePrint);
+  $('#printBtn').onclick = () => { if (animating) return; preparePrint(); window.print(); };
+  $('#bigBtn').onclick = () => {
+    const on = document.body.classList.toggle('big');
+    try { if (on && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); } catch (e) {}
+    showBanner(on ? 'Esc 키로 돌아와요' : '', on ? 1300 : 1);
+  };
+  document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) document.body.classList.remove('big'); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.body.classList.contains('big')) document.body.classList.remove('big');
+    if (e.key === ' ' && document.body.classList.contains('big') && !animating) { e.preventDefault(); go(); }
+  });
+
+  // 저장된 값 검증
+  if (!Array.isArray(state.disabled) || state.disabled.some(i => i < 0 || i >= TOTAL)) state.disabled = defaultDisabled(studentCount());
+  if (state.result && (!Array.isArray(state.result) || state.result.length !== TOTAL)) state.result = null;
+  build();
+})();
+</script>
+</body>
+</html>
