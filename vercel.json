@@ -1,6 +1,7 @@
 {
   "rewrites": [
     { "source": "/quiz", "destination": "/우리말겨루기.html" },
-    { "source": "/mylog", "destination": "/생활기록부.html" }
+    { "source": "/mylog", "destination": "/생활기록부.html" },
+    { "source": "/idea", "destination": "/의견모으기.html" }
   ]
 }
