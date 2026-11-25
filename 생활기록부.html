@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>내가 만드는 생활기록부</title>
+<style>
+  :root{
+    --bg:#f6f3ec; --paper:#fffdf8; --ink:#2b2a27; --muted:#77736a; --line:#e3ddd0;
+    --accent:#2f6b4f; --accent-soft:#e4efe8;
+    --draft:#b7861a; --draft-soft:#fbf1d9;
+    --none:#9a958b; --none-soft:#eeebe4;
+    --warn:#b4542b; --warn-soft:#fbeae2;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Pretendard","Malgun Gothic","Apple SD Gothic Neo",sans-serif;line-height:1.6}
+  .wrap{max-width:860px;margin:0 auto;padding:28px 16px 80px}
+  .wrap.wide{max-width:1280px}
+  header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;
+    border-bottom:3px double var(--ink);padding-bottom:12px;margin-bottom:24px}
+  h1{margin:0;font-size:28px;letter-spacing:-.5px}
+  h1 small{display:block;font-size:14px;font-weight:400;color:var(--muted);letter-spacing:0}
+  h2{font-size:17px;margin:0 0 12px}
+  .mode-btn{background:none;border:1px solid var(--line);color:var(--muted);border-radius:999px;
+    padding:6px 14px;font:inherit;font-size:13px;cursor:pointer}
+  .mode-btn:hover{border-color:var(--ink);color:var(--ink)}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .row > label{flex:1 1 180px}
+  label{display:block;font-weight:600;font-size:14px;margin-bottom:12px}
+  .hint{font-weight:400;color:var(--muted);font-size:12px;margin-left:6px}
+  input[type=text],input[type=password],textarea{display:block;width:100%;margin-top:6px;padding:10px 12px;font:inherit;font-weight:400;
+    border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+  input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent}
+  textarea{min-height:110px;resize:vertical}
+  textarea.tall{min-height:280px}
+  .guide{display:block;margin-top:6px;padding:8px 12px;border-radius:8px;background:var(--accent-soft);
+    color:var(--accent);font-weight:400;font-size:13px;line-height:1.55;word-break:keep-all}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;border-radius:10px;padding:12px 20px;
+    font:inherit;font-weight:700;cursor:pointer;background:var(--accent);color:#fff}
+  .btn:hover{filter:brightness(1.08)}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn.ghost{background:var(--paper);color:var(--ink);border:1px dashed var(--muted);font-weight:600}
+  .btn.line{background:var(--paper);color:var(--ink);border:1px solid var(--line);font-weight:600}
+  .btn.small{padding:8px 14px;font-size:14px}
+  .btn.danger{background:var(--paper);color:var(--warn);border:1px solid var(--warn)}
+  .notice{background:var(--warn-soft);color:var(--warn);border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:14px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;
+    padding:10px 18px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:9}
+  .toast.show{opacity:1}
+  .hidden{display:none!important}
+
+  /* 학생용 */
+  .login{max-width:460px;margin:40px auto 0}
+  .me-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+  .me-bar b{font-size:18px}
+  .pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 12px;font-size:13px;font-weight:600;white-space:nowrap}
+  .pill.done{background:var(--accent-soft);color:var(--accent)}
+  .pill.draft{background:var(--draft-soft);color:var(--draft)}
+  .pill.none{background:var(--none-soft);color:var(--none)}
+  .pill.err{background:var(--warn-soft);color:var(--warn)}
+  .save-state{margin-left:auto;font-size:13px;color:var(--muted)}
+  .act-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .act-no{display:inline-block;background:var(--accent);color:#fff;border-radius:8px;padding:2px 10px;font-weight:700;font-size:14px}
+  .del{background:none;border:none;color:var(--muted);cursor:pointer;font:inherit;font-size:13px}
+  .del:hover{color:var(--warn)}
+  .count{text-align:right;font-size:12px;color:var(--muted);margin-top:4px;font-weight:400}
+  .add{width:100%;margin-bottom:24px}
+  .submit-box{text-align:center;background:var(--accent-soft);border-radius:14px;padding:22px}
+  .submit-box p{margin:10px 0 0;color:var(--muted);font-size:14px}
+
+  /* 선생님용 */
+  .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+  .sum{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;text-align:left;font:inherit;color:inherit}
+  .sum.on{outline:2px solid var(--ink)}
+  .sum .n{font-size:28px;font-weight:800;line-height:1.1}
+  .sum .l{font-size:13px;color:var(--muted)}
+  .sum.done .n{color:var(--accent)} .sum.draft .n{color:var(--draft)} .sum.none .n{color:var(--none)}
+  .bar{height:10px;border-radius:99px;background:var(--none-soft);overflow:hidden;display:flex;margin-bottom:6px}
+  .bar i{display:block;height:100%}
+  .live{font-size:13px;color:var(--muted);margin-bottom:18px;display:flex;align-items:center;gap:6px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 1.6s infinite}
+  .dot.off{background:var(--warn);animation:none}
+  @keyframes pulse{50%{opacity:.25}}
+  .chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:8px;margin-bottom:22px}
+  .chip{border-radius:10px;padding:8px 10px;font:inherit;font-size:14px;cursor:pointer;text-align:left;border:1px solid transparent;line-height:1.35}
+  .chip small{display:block;font-size:11px;opacity:.8}
+  .chip.done{background:var(--accent);color:#fff}
+  .chip.draft{background:var(--draft-soft);color:#7a5a10;border-color:#ecd79f}
+  .chip.none{background:var(--paper);color:var(--none);border:1px dashed #cfc9bc}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .toolbar input{flex:1 1 200px;margin:0}
+  details.card summary{cursor:pointer;font-weight:700}
+  details.card textarea{min-height:160px;font-family:Consolas,monospace;font-size:13px}
+  .tbl-wrap{overflow-x:auto;background:var(--paper);border:1px solid var(--line);border-radius:14px}
+  table{border-collapse:collapse;width:100%;min-width:960px;font-size:14px}
+  th,td{border-bottom:1px solid var(--line);padding:10px 12px;vertical-align:top;text-align:left}
+  th{background:#efeadf;font-size:13px;white-space:nowrap}
+  td.id{white-space:nowrap;font-weight:700}
+  td.txt{white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere}
+  tr.first td{border-top:2px solid #cfc7b6}
+  tr.flash td{animation:flash 1.6s}
+  @keyframes flash{0%{background:#fff3b0}100%{background:transparent}}
+  .empty{color:var(--warn);background:var(--warn-soft);border-radius:6px;padding:0 6px;font-size:12px}
+  .meta{display:block;font-weight:400;color:var(--muted);font-size:11px;margin-top:4px}
+  .rm{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0;margin-top:6px}
+  .rm:hover{color:var(--warn)}
+  .none-msg{padding:40px;text-align:center;color:var(--muted)}
+
+  @media (max-width:640px){ .summary{grid-template-columns:repeat(2,1fr)} h1{font-size:23px} }
+  @media print{
+    body{background:#fff}
+    .no-print,.mode-btn,.toolbar,.rm,details,.live{display:none!important}
+    .tbl-wrap{border:none;overflow:visible}
+    table{min-width:0;font-size:11px}
+    tr{page-break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== 학생용 ===== -->
+<div id="studentView" class="wrap">
+  <header>
+    <h1>내가 만드는 생활기록부<small>나의 활동을 직접 기록해요</small></h1>
+    <button class="mode-btn" id="toTeacher">선생님용 ▸</button>
+  </header>
+  <div class="notice hidden" id="offlineNote">이 화면은 인터넷 주소로 열어야 기록이 선생님께 전달돼요. (지금은 파일로 열려 있어요)</div>
+
+  <div id="loginBox" class="card login">
+    <h2>학번과 이름을 써 주세요</h2>
+    <label>학번 <span class="hint">예) 10305</span><input type="text" id="sid" inputmode="numeric" autocomplete="off"></label>
+    <label>이름<input type="text" id="sname" autocomplete="off"></label>
+    <button class="btn" id="startBtn" style="width:100%">시작하기</button>
+  </div>
+
+  <div id="editBox" class="hidden">
+    <div class="me-bar">
+      <b id="meLabel"></b>
+      <span class="pill none" id="mePill">아직 제출 전</span>
+      <button class="del" id="switchBtn">다른 학생으로 바꾸기</button>
+      <span class="save-state" id="saveState"></span>
+    </div>
+    <div id="acts"></div>
+    <button class="btn ghost add" id="addAct">＋ 활동 추가하기</button>
+    <div class="submit-box">
+      <button class="btn" id="submitBtn">✅ 선생님께 제출하기</button>
+      <p id="submitHint">쓰는 동안 자동으로 저장돼요. 다 쓰면 제출 버튼을 눌러 주세요.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 선생님용 ===== -->
+<div id="teacherView" class="wrap wide hidden">
+  <header>
+    <h1>내가 만드는 생활기록부<small>선생님용 · 실시간 제출 현황</small></h1>
+    <button class="mode-btn" id="toStudent">◂ 학생용 화면</button>
+  </header>
+
+  <div id="pinBox" class="card login">
+    <h2>선생님 비밀번호</h2>
+    <label><input type="password" id="pin" autocomplete="current-password"></label>
+    <button class="btn" id="pinBtn" style="width:100%">확인</button>
+  </div>
+
+  <div id="board" class="hidden">
+    <div class="summary">
+      <button class="sum on" data-f="all"><div class="n" id="cAll">0</div><div class="l">전체</div></button>
+      <button class="sum done" data-f="done"><div class="n" id="cDone">0</div><div class="l">✅ 제출 완료</div></button>
+      <button class="sum draft" data-f="draft"><div class="n" id="cDraft">0</div><div class="l">✏️ 작성 중</div></button>
+      <button class="sum none" data-f="none"><div class="n" id="cNone">0</div><div class="l">⬜ 아직 안 함</div></button>
+    </div>
+    <div class="bar"><i id="bDone" style="background:var(--accent)"></i><i id="bDraft" style="background:#e3b94a"></i></div>
+    <div class="live"><span class="dot" id="dot"></span><span id="liveText">불러오는 중…</span></div>
+
+    <div class="chips" id="chips"></div>
+
+    <details class="card no-print" id="rosterBox">
+      <summary>📋 우리 반 명단 입력 <span class="hint" id="rosterHint"></span></summary>
+      <p class="hint" style="margin:10px 0 0">한 줄에 한 명씩 <b>학번 이름</b>으로 써 주세요. 엑셀에서 두 칸을 복사해 붙여 넣어도 돼요. 명단이 있어야 '아직 안 함' 학생이 보여요.</p>
+      <textarea id="rosterIn" placeholder="10301 김가온&#10;10302 나다은&#10;10303 박서준"></textarea>
+      <button class="btn small" id="rosterSave" style="margin-top:10px">명단 저장</button>
+    </details>
+
+    <div class="toolbar">
+      <input type="text" id="search" placeholder="학번·이름·내용 검색">
+      <button class="btn small" id="xlsBtn">📊 엑셀로 저장</button>
+      <button class="btn small line" id="printBtn">🖨 인쇄</button>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th style="width:100px">학번</th><th style="width:90px">이름</th><th style="width:84px">상태</th><th style="width:44px">번호</th>
+          <th style="width:17%">활동 제목</th><th>활동 내용</th><th>내용 요약</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="none-msg hidden" id="noneMsg"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const API = 'api/lifelog';
+  const $ = id => document.getElementById(id);
+  const ls = {
+    get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } },
+    set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+    del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+  };
+  function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show');
+    clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),2400); }
+  const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const hm = t => { const d=new Date(t); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
+  const hms = t => hm(t)+':'+String(new Date(t).getSeconds()).padStart(2,'0');
+  async function api(path, opt={}){
+    opt.headers = Object.assign({'Content-Type':'application/json'}, opt.headers||{});
+    const r = await fetch(path, opt);
+    let j={}; try{ j=await r.json(); }catch(e){}
+    return { ok:r.ok, status:r.status, data:j };
+  }
+  if(location.protocol==='file:') $('offlineNote').classList.remove('hidden');
+
+  /* ================= 학생용 ================= */
+  const blank = () => ({title:'',content:'',growth:''});
+  let me = null;          // {sid,name}
+  let rec = null;         // {activities, submittedAt}
+  let saveTimer = null, dirty = false;
+
+  function draftKey(){ return 'lifelogDraft:'+me.sid; }
+
+  async function start(sid, name){
+    sid = sid.trim(); name = name.trim().replace(/\s+/g,' ');
+    if(!/^\d{3,8}$/.test(sid)){ toast('학번을 숫자로 써 주세요'); $('sid').focus(); return; }
+    if(!name){ toast('이름을 써 주세요'); $('sname').focus(); return; }
+    $('startBtn').disabled = true;
+    let server = null;
+    try{
+      const r = await api(`${API}?sid=${encodeURIComponent(sid)}&name=${encodeURIComponent(name)}`);
+      if(r.status===409){ toast('이 학번은 다른 이름으로 쓰고 있어요. 학번과 이름을 확인해 주세요'); $('startBtn').disabled=false; return; }
+      if(r.ok) server = r.data.record;
+    }catch(e){}
+    $('startBtn').disabled = false;
+    me = {sid, name}; ls.set('lifelogMe', me);
+    const local = ls.get(draftKey());
+    // 서버 기록과 이 기기의 임시 기록 중 더 최근 것을 사용
+    if(server && (!local || (server.updatedAt||0) >= (local.updatedAt||0))) rec = server;
+    else if(local) { rec = local; dirty = true; }
+    else rec = { activities:[blank(),blank(),blank()], submittedAt:null };
+    if(!rec.activities.length) rec.activities=[blank()];
+    $('loginBox').classList.add('hidden'); $('editBox').classList.remove('hidden');
+    $('meLabel').textContent = `${sid} ${name}`;
+    renderActs(); renderStatus();
+    if(dirty) scheduleSave(200);
+  }
+
+  function renderStatus(err){
+    const p=$('mePill');
+    if(rec.submittedAt){ p.className='pill done'; p.textContent='✅ 제출 완료 '+hm(rec.submittedAt);
+      $('submitBtn').textContent='✅ 고친 내용 다시 제출하기';
+      $('submitHint').textContent='제출했어요! 고친 내용도 자동 저장되고, 다시 제출하면 제출 시각이 바뀌어요.'; }
+    else { p.className='pill draft'; p.textContent='✏️ 작성 중 (아직 제출 전)'; }
+    $('saveState').innerHTML = err ? '<span class="pill err">⚠ 저장 실패 · 인터넷을 확인해 주세요</span>'
+      : dirty ? '저장 중…' : (rec.updatedAt ? '자동 저장됨 '+hm(rec.updatedAt) : '');
+  }
+
+  const CONTENT_GUIDE = '맡은 역할 → 하게 된 이유 및 동기 → 목적 → 활동 과정 및 내용 →하면서 어려웠던 점 → 문제(갈등) 해결(극복) 방법 → 성과(결과) → 나의 깨달음 → 성장 및 변화 → 추후 계획 순서로 써 주세요.';
+  function field(label, key, i, multi, hint, guide){
+    const v = esc(rec.activities[i][key]);
+    return `<label>${label}${hint?`<span class="hint">${hint}</span>`:''}` +
+      (guide ? `<span class="guide">${guide}</span>` : '') +
+      (multi ? `<textarea data-i="${i}" data-k="${key}"${guide?' class="tall"':''}>${v}</textarea><div class="count"></div>`
+             : `<input type="text" data-i="${i}" data-k="${key}" value="${v}">`) + `</label>`;
+  }
+  function renderActs(){
+    $('acts').innerHTML = rec.activities.map((a,i)=>`
+      <div class="card">
+        <div class="act-head"><span class="act-no">활동 ${i+1}</span>
+          ${rec.activities.length>1?`<button class="del" data-del="${i}">삭제</button>`:''}</div>
+        ${field('활동 제목','title',i,false)}
+        ${field('활동 내용','content',i,true,'',CONTENT_GUIDE)}
+        ${field('내용 요약','growth',i,true,'위 활동 내용을 짧게 정리해요')}
+      </div>`).join('');
+    document.querySelectorAll('#acts textarea').forEach(updateCount);
+  }
+  function updateCount(ta){ ta.nextElementSibling.textContent = ta.value.length + '자'; }
+
+  function changed(){
+    dirty = true; rec.updatedAt = Date.now();
+    ls.set(draftKey(), rec); renderStatus(); scheduleSave(2000);
+  }
+  function scheduleSave(ms){ clearTimeout(saveTimer); saveTimer=setTimeout(()=>save(false), ms); }
+
+  async function save(submit){
+    clearTimeout(saveTimer);
+    try{
+      const r = await api(API,{method:'POST',body:JSON.stringify({sid:me.sid,name:me.name,activities:rec.activities,submit})});
+      if(r.status===409){ toast('이 학번은 다른 이름으로 저장되어 있어요'); renderStatus(true); return false; }
+      if(!r.ok) throw 0;
+      rec.updatedAt = r.data.record.updatedAt; rec.submittedAt = r.data.record.submittedAt;
+      dirty = false; ls.set(draftKey(), rec); renderStatus(); return true;
+    }catch(e){ renderStatus(true); scheduleSave(10000); return false; }
+  }
+
+  $('acts').addEventListener('input', e=>{
+    const el=e.target; if(el.dataset.k==null) return;
+    rec.activities[+el.dataset.i][el.dataset.k]=el.value;
+    if(el.tagName==='TEXTAREA') updateCount(el);
+    changed();
+  });
+  $('acts').addEventListener('click', e=>{
+    const d=e.target.dataset.del; if(d==null) return;
+    const a=rec.activities[+d];
+    if((a.title||a.content||a.growth) && !confirm(`활동 ${+d+1}을(를) 삭제할까요?`)) return;
+    rec.activities.splice(+d,1); renderActs(); changed();
+  });
+  $('addAct').onclick=()=>{ rec.activities.push(blank()); renderActs(); changed();
+    const c=document.querySelectorAll('#acts .card'); c[c.length-1].scrollIntoView({behavior:'smooth',block:'center'}); };
+  $('submitBtn').onclick=async()=>{
+    const filled = rec.activities.filter(a=>a.title.trim()||a.content.trim()||a.growth.trim());
+    if(!filled.length){ toast('활동을 하나 이상 써 주세요'); return; }
+    const miss = filled.findIndex(a=>!a.title.trim()||!a.content.trim()||!a.growth.trim());
+    if(miss>=0 && !confirm(`비어 있는 칸이 있어요. 그래도 제출할까요?`)) return;
+    $('submitBtn').disabled=true;
+    const ok = await save(true);
+    $('submitBtn').disabled=false;
+    toast(ok ? '제출했어요! 선생님 화면에 바로 표시돼요 🎉' : '제출하지 못했어요. 인터넷 연결을 확인해 주세요');
+  };
+  $('startBtn').onclick=()=>start($('sid').value, $('sname').value);
+  $('sname').addEventListener('keydown',e=>{ if(e.key==='Enter') $('startBtn').click(); });
+  $('switchBtn').onclick=async()=>{
+    if(dirty) await save(false);
+    ls.del('lifelogMe'); me=null; rec=null;
+    $('editBox').classList.add('hidden'); $('loginBox').classList.remove('hidden');
+    $('sid').value=''; $('sname').value=''; $('sid').focus();
+  };
+  window.addEventListener('beforeunload', e=>{ if(dirty && me){ save(false); e.preventDefault(); e.returnValue=''; } });
+
+  /* ================= 선생님용 ================= */
+  let pin = (()=>{ try{ return sessionStorage.getItem('lifelogPin')||''; }catch(e){ return ''; } })();
+  let data = { records:[], roster:[] }, filter='all', pollTimer=null, lastSeen={}, firstLoad=true;
+
+  function setMode(t){
+    $('studentView').classList.toggle('hidden',t); $('teacherView').classList.toggle('hidden',!t);
+    history.replaceState(null,'',t?'#teacher':location.pathname+location.search);
+    if(t){ if(pin) tryPin(pin); else $('pin').focus(); } else stopPoll();
+    window.scrollTo(0,0);
+  }
+  $('toTeacher').onclick=()=>setMode(true);
+  $('toStudent').onclick=()=>setMode(false);
+
+  async function load(){
+    try{
+      const r = await api(API+'?all=1',{headers:{'x-teacher-pin':pin}});
+      if(r.status===401) return 'pin';
+      if(!r.ok) throw r.data.error||r.status;
+      data = r.data; render();
+      $('dot').classList.remove('off');
+      $('liveText').textContent = `실시간 · 10초마다 자동 새로고침 · 마지막 확인 ${hms(Date.now())}`;
+      return 'ok';
+    }catch(e){
+      $('dot').classList.add('off');
+      $('liveText').textContent = e==='TEACHER_PIN not set' ? '서버에 TEACHER_PIN이 설정되지 않았어요'
+        : e==='db not configured' ? '서버 저장소(Upstash Redis)가 연결되지 않았어요' : '연결이 끊겼어요 · 다시 시도하는 중…';
+      return 'err';
+    }
+  }
+  async function tryPin(v){
+    pin=v; $('pinBtn').disabled=true;
+    const r = await load(); $('pinBtn').disabled=false;
+    if(r==='pin'){ pin=''; try{sessionStorage.removeItem('lifelogPin')}catch(e){} toast('비밀번호가 맞지 않아요'); $('pinBox').classList.remove('hidden'); $('board').classList.add('hidden'); return; }
+    try{ sessionStorage.setItem('lifelogPin',pin); }catch(e){}
+    $('pinBox').classList.add('hidden'); $('board').classList.remove('hidden');
+    startPoll();
+  }
+  $('pinBtn').onclick=()=>tryPin($('pin').value.trim());
+  $('pin').addEventListener('keydown',e=>{ if(e.key==='Enter') $('pinBtn').click(); });
+  function startPoll(){ stopPoll(); pollTimer=setInterval(()=>{ if(!document.hidden) load(); },10000); }
+  function stopPoll(){ clearInterval(pollTimer); pollTimer=null; }
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden && pollTimer) load(); });
+
+  const STATUS = { done:'✅ 제출', draft:'✏️ 작성 중', none:'⬜ 안 함' };
+  function people(){
+    const bySid = {}; data.records.forEach(r=>bySid[r.sid]=r);
+    const list = data.roster.map(p=>({ sid:p.sid, name:(bySid[p.sid]&&bySid[p.sid].name)||p.name, rec:bySid[p.sid]||null }));
+    const inRoster = new Set(data.roster.map(p=>p.sid));
+    data.records.filter(r=>!inRoster.has(r.sid)).forEach(r=>list.push({sid:r.sid,name:r.name,rec:r,extra:data.roster.length>0}));
+    list.forEach(p=>p.status = !p.rec ? 'none' : p.rec.submittedAt ? 'done' : 'draft');
+    return list.sort((a,b)=>a.sid.localeCompare(b.sid,'ko',{numeric:true}));
+  }
+  const filled = acts => { const f=(acts||[]).filter(a=>a.title||a.content||a.growth); return f.length?f:[blank()]; };
+  const cell = v => v ? esc(v) : '<span class="empty">비어 있음</span>';
+
+  function render(){
+    const list = people();
+    const c = {done:0,draft:0,none:0}; list.forEach(p=>c[p.status]++);
+    $('cAll').textContent=list.length; $('cDone').textContent=c.done; $('cDraft').textContent=c.draft; $('cNone').textContent=c.none;
+    const n=list.length||1;
+    $('bDone').style.width=(c.done/n*100)+'%'; $('bDraft').style.width=(c.draft/n*100)+'%';
+    $('rosterHint').textContent = data.roster.length ? `(${data.roster.length}명 등록됨)` : '(아직 없음 — 먼저 입력해 주세요)';
+    if(!$('rosterBox').open && !data.roster.length && firstLoad) $('rosterBox').open = true;
+    if(document.activeElement!==$('rosterIn')) $('rosterIn').value = data.roster.map(p=>p.sid+' '+p.name).join('\n');
+
+    // 새로 바뀐 학생 표시
+    const changedSids = new Set();
+    data.records.forEach(r=>{ if(!firstLoad && lastSeen[r.sid]!==r.updatedAt) changedSids.add(r.sid); lastSeen[r.sid]=r.updatedAt; });
+    firstLoad=false;
+
+    const shown = list.filter(p=>filter==='all'||p.status===filter);
+    $('chips').innerHTML = shown.map(p=>`<button class="chip ${p.status}" data-go="${esc(p.sid)}" title="${STATUS[p.status]}">
+      <b>${esc(p.name)||'?'}</b><small>${esc(p.sid)} · ${p.status==='done'?'제출 '+hm(p.rec.submittedAt):p.status==='draft'?'작성 중':'안 함'}${p.extra?' · 명단 밖':''}</small></button>`).join('');
+
+    const q=$('search').value.trim().toLowerCase();
+    const rows = shown.filter(p=>!q || JSON.stringify([p.sid,p.name,p.rec&&p.rec.activities]).toLowerCase().includes(q));
+    $('noneMsg').classList.toggle('hidden', rows.length>0);
+    $('noneMsg').textContent = list.length ? '조건에 맞는 학생이 없어요.' : '아직 기록한 학생이 없어요. 명단을 넣으면 반 전체가 보여요.';
+    $('tbody').innerHTML = rows.map(p=>{
+      const acts = p.rec ? filled(p.rec.activities) : [null], k=acts.length, fl=changedSids.has(p.sid)?' flash':'';
+      return acts.map((a,i)=>`<tr class="${i===0?'first':''}${fl}" ${i===0?`id="row-${esc(p.sid)}"`:''}>
+        ${i===0?`<td class="id" rowspan="${k}">${esc(p.sid)}${p.rec?`<span class="meta">수정 ${hm(p.rec.updatedAt)}</span><button class="rm" data-rm="${esc(p.sid)}">✕ 기록 삭제</button>`:''}</td>
+          <td class="id" rowspan="${k}">${esc(p.name)}</td>
+          <td rowspan="${k}"><span class="pill ${p.status}">${STATUS[p.status]}</span></td>`:''}
+        ${a?`<td>${i+1}</td><td class="txt">${cell(a.title)}</td><td class="txt">${cell(a.content)}</td><td class="txt">${cell(a.growth)}</td>`
+           :`<td colspan="4" style="color:var(--muted)">아직 기록이 없어요</td>`}
+      </tr>`).join('');
+    }).join('');
+  }
+
+  document.querySelectorAll('.sum').forEach(b=>b.onclick=()=>{
+    filter=b.dataset.f; document.querySelectorAll('.sum').forEach(x=>x.classList.toggle('on',x===b)); render();
+  });
+  $('chips').addEventListener('click',e=>{
+    const b=e.target.closest('[data-go]'); if(!b) return;
+    const row=$('row-'+b.dataset.go); if(row){ row.scrollIntoView({behavior:'smooth',block:'center'}); }
+  });
+  $('search').oninput=render;
+  $('rosterSave').onclick=async()=>{
+    const roster = $('rosterIn').value.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>{
+      const m=l.match(/^(\d{3,8})[\s,\t]+(.+)$/); return m?{sid:m[1],name:m[2].trim()}:null; });
+    const bad = roster.filter(x=>!x).length;
+    if(bad && !confirm(`형식이 맞지 않는 줄 ${bad}개는 빼고 저장할까요?\n(한 줄에 "학번 이름")`)) return;
+    const r = await api(API,{method:'POST',headers:{'x-teacher-pin':pin},body:JSON.stringify({action:'roster',roster:roster.filter(Boolean)})});
+    if(!r.ok){ toast('명단을 저장하지 못했어요'); return; }
+    data.roster=r.data.roster; $('rosterIn').blur(); render(); toast(`명단 ${data.roster.length}명을 저장했어요`);
+  };
+  $('tbody').addEventListener('click',async e=>{
+    const sid=e.target.dataset.rm; if(sid==null) return;
+    const r0=data.records.find(r=>r.sid===sid);
+    if(!confirm(`${sid} ${r0?r0.name:''} 학생의 기록을 서버에서 지울까요?\n되돌릴 수 없어요.`)) return;
+    const r = await api(API,{method:'POST',headers:{'x-teacher-pin':pin},body:JSON.stringify({action:'delete',sid})});
+    if(!r.ok){ toast('지우지 못했어요'); return; }
+    load(); toast('기록을 지웠어요');
+  });
+  $('printBtn').onclick=()=>window.print();
+  $('xlsBtn').onclick=()=>{
+    const list=people(); if(!list.length){ toast('아직 기록이 없어요'); return; }
+    const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+    const rows=[['학번','이름','상태','번호','활동 제목','활동 내용','내용 요약','제출 시각','마지막 수정']];
+    const label={done:'제출',draft:'작성 중',none:'안 함'};
+    const ts=t=>t?new Date(t).toLocaleString('ko-KR'):'';
+    list.forEach(p=>{
+      if(!p.rec){ rows.push([p.sid,p.name,label.none,'','','','','','']); return; }
+      filled(p.rec.activities).forEach((a,i)=>rows.push([p.sid,p.name,label[p.status],i+1,a.title,a.content,a.growth,ts(p.rec.submittedAt),ts(p.rec.updatedAt)]));
+    });
+    const csv='﻿'+rows.map(r=>r.map(q).join(',')).join('\r\n');
+    const t=new Date(), stamp=`${t.getFullYear()}${String(t.getMonth()+1).padStart(2,'0')}${String(t.getDate()).padStart(2,'0')}`;
+    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+    a.download=`생활기록부_${stamp}.csv`; document.body.appendChild(a); a.click();
+    setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},500);
+    toast('엑셀 파일로 저장했어요');
+  };
+
+  /* ---------- 시작 ---------- */
+  if(location.hash==='#teacher') setMode(true);
+  else { const saved=ls.get('lifelogMe'); if(saved&&saved.sid){ $('sid').value=saved.sid; $('sname').value=saved.name; start(saved.sid,saved.name); } }
+})();
+</script>
+</body>
+</html>
